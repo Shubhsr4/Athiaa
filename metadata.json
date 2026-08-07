@@ -1,0 +1,6 @@
+{
+  "name": "Aathia",
+  "description": "An Indian dog and animal rescue NGO dedicated to rescuing, rehabilitating, and rehoming India's street dogs (INDogs) and other stray animals.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
