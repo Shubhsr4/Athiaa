@@ -58,7 +58,7 @@ serve(async (req: Request) => {
     const phone = formatE164(rawPhone);
     if (!phone) {
       return new Response(
-        JSON.stringify({ error: 'Invalid phone number format. Must be E.164 (e.g. +919876543210).' }),
+        JSON.stringify({ error: 'Invalid phone number format. Must be a valid 10-digit Indian mobile number.' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -77,6 +77,7 @@ serve(async (req: Request) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
+    // Check Rate Limit (30 second cooldown per phone number)
     const { data: rateLimit } = await supabaseAdmin
       .from('otp_rate_limits')
       .select('last_requested_at')
@@ -94,9 +95,10 @@ serve(async (req: Request) => {
       }
     }
 
+    // Generate 6-digit OTP & store SHA-256 hash
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpHash = await hashOtp(otp);
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes expiry
 
     const { error: insertError } = await supabaseAdmin
       .from('otp_codes')
@@ -116,10 +118,12 @@ serve(async (req: Request) => {
       );
     }
 
+    // Update rate limit timestamp
     await supabaseAdmin
       .from('otp_rate_limits')
       .upsert({ phone: phone, last_requested_at: new Date().toISOString() }, { onConflict: 'phone' });
 
+    // Send via MSG91 API v5 Gateway
     const msg91AuthKey = Deno.env.get('MSG91_AUTH_KEY');
     const msg91TemplateId = Deno.env.get('MSG91_TEMPLATE_ID');
 
@@ -131,16 +135,16 @@ serve(async (req: Request) => {
       const smsData = await smsRes.json().catch(() => ({}));
 
       if (!smsRes.ok) {
-        console.error('MSG91 API error:', smsData);
+        console.error('MSG91 API error response:', smsData);
       }
     } else {
-      console.log(`[LOCAL DEV MODE] Generated OTP for ${phone}: ${otp}`);
+      console.log(`[MSG91 DEV FALLBACK] Generated OTP for ${phone}: ${otp}`);
     }
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'OTP sent successfully',
+        message: 'OTP transmitted successfully via SMS/WhatsApp gateway',
         phone: phone,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

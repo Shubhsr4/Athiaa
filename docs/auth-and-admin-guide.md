@@ -62,7 +62,7 @@ In local development mode, logging in with phone number **`9999999999`** and tes
 ### Key Subsystems Detailed:
 
 ### Subsystem 1: MSG91 Phone-OTP Generation (`generate-otp`)
-- **Location**: [supabase/functions/generate-otp/index.ts](file:///c:/Users/Admin/OneDrive/Desktop/Aathia/supabase/functions/generate-otp/index.ts)
+- **Location**: [supabase/functions/generate-otp/index.ts](file:///c:/Users/Admin/OneDrive/Desktop/Athiaa/supabase/functions/generate-otp/index.ts)
 - **Workflow**:
   1. Validates & formats input mobile number to E.164 (`+91XXXXXXXXXX`).
   2. Enforces 30-second rate limiting per phone number using `otp_rate_limits`.
@@ -73,7 +73,7 @@ In local development mode, logging in with phone number **`9999999999`** and tes
 ---
 
 ### Subsystem 2: OTP Verification & Session Issuance (`verify-otp`)
-- **Location**: [supabase/functions/verify-otp/index.ts](file:///c:/Users/Admin/OneDrive/Desktop/Aathia/supabase/functions/verify-otp/index.ts)
+- **Location**: [supabase/functions/verify-otp/index.ts](file:///c:/Users/Admin/OneDrive/Desktop/Athiaa/supabase/functions/verify-otp/index.ts)
 - **Workflow**:
   1. Hashes input code with SHA-256 and compares it against `otp_codes`.
   2. Blocks verification if attempts exceed 5; sets `verified = true` on match.
@@ -84,7 +84,7 @@ In local development mode, logging in with phone number **`9999999999`** and tes
 ---
 
 ### Subsystem 3: Database Trigger & Auto-Profile (`handle_new_user()`)
-- **Location**: [supabase/migrations/20260807000003_profiles.sql](file:///c:/Users/Admin/OneDrive/Desktop/Aathia/supabase/migrations/20260807000003_profiles.sql)
+- **Location**: [supabase/migrations/20260807000003_profiles.sql](file:///c:/Users/Admin/OneDrive/Desktop/Athiaa/supabase/migrations/20260807000003_profiles.sql)
 - **Workflow**:
   1. Trigger `on_auth_user_created` executes automatically whenever a row appears in `auth.users`.
   2. Inserts profile record into `profiles` table.
@@ -93,7 +93,7 @@ In local development mode, logging in with phone number **`9999999999`** and tes
 ---
 
 ### Subsystem 4: Role-Based Authorization & RLS
-- **Location**: [supabase/migrations/20260807000002_app_role_and_user_roles.sql](file:///c:/Users/Admin/OneDrive/Desktop/Aathia/supabase/migrations/20260807000002_app_role_and_user_roles.sql)
+- **Location**: [supabase/migrations/20260807000002_app_role_and_user_roles.sql](file:///c:/Users/Admin/OneDrive/Desktop/Athiaa/supabase/migrations/20260807000002_app_role_and_user_roles.sql)
 - **Design Principle**:
   - Roles live **exclusively** inside `user_roles` (`donor`, `volunteer`, `ngo_staff`, `admin`, `super_admin`).
   - Roles **never** live on `profiles`, preventing users from self-elevating privileges by editing their profile.
@@ -102,7 +102,7 @@ In local development mode, logging in with phone number **`9999999999`** and tes
 ---
 
 ### Subsystem 5: Frontend Route Protection (`AdminRoute` & `AuthProvider`)
-- **Location**: [components/providers/AuthProvider.tsx](file:///c:/Users/Admin/OneDrive/Desktop/Aathia/components/providers/AuthProvider.tsx) & [src/components/AdminRoute.tsx](file:///c:/Users/Admin/OneDrive/Desktop/Aathia/src/components/AdminRoute.tsx)
+- **Location**: [components/providers/AuthProvider.tsx](file:///c:/Users/Admin/OneDrive/Desktop/Athiaa/components/providers/AuthProvider.tsx) & [src/components/AdminRoute.tsx](file:///c:/Users/Admin/OneDrive/Desktop/Athiaa/src/components/AdminRoute.tsx)
 - **Workflow**:
   1. `AuthProvider` queries `user_roles` table and `is_admin()` RPC function on startup.
   2. `AdminRoute` component gates all `/admin/*` routes in `src/App.tsx`.

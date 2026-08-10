@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   LogOut, 
   Download, 
@@ -29,6 +30,7 @@ import { Link } from 'react-router-dom';
 import { createClient } from '@/lib/supabase/client';
 
 export default function DashboardPage() {
+  const { t } = useTranslation();
   const { 
     favoriteDogs, 
     adoptionApplications, 
@@ -263,7 +265,7 @@ export default function DashboardPage() {
           
           <div className="bg-[#1C1C2E] p-6 text-white text-center relative space-y-2 overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-[#E8572A]/20 to-transparent pointer-events-none" />
-            <p className="text-2xl font-bold font-baloo">Aathia Member Portal</p>
+            <p className="text-2xl font-bold font-baloo">Athiaa Member Portal</p>
             <p className="text-[11px] text-gray-300 font-medium leading-relaxed">Create your profile to log adoption files, track fosters, and secure 80G tax receipts instantly.</p>
           </div>
 
@@ -426,7 +428,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div id="aathia-user-dashboard" className="max-w-7xl mx-auto px-4 py-16 space-y-8 font-sans text-left">
+    <div id="athiaa-user-dashboard" className="max-w-7xl mx-auto px-4 py-16 space-y-8 font-sans text-left">
       
       {/* 1. Profile banner header */}
       <div className="bg-gradient-to-r from-deep via-slate-800 to-slate-900 text-white rounded-3xl p-6 md:p-8 flex flex-col md:flex-row justify-between items-center gap-6 shadow-xl relative overflow-hidden">
@@ -524,7 +526,7 @@ export default function DashboardPage() {
               <div className="p-5 bg-gradient-to-br from-[#FFFBF7] to-[#FFEBE0] rounded-2xl border border-orange-100/50 flex items-center space-x-3 text-xs leading-relaxed">
                 <Sparkles size={24} className="text-primary shrink-0" />
                 <div>
-                  <p className="font-bold text-deep">Aathia Citizen Member Status</p>
+                  <p className="font-bold text-deep">Athiaa Citizen Member Status</p>
                   <p className="text-gray-500 font-medium">As an active signed-in member, you have priority review tags on adoption applications across Delhi, Pune, Mumbai, and Bangalore clinics!</p>
                 </div>
               </div>
@@ -694,7 +696,7 @@ export default function DashboardPage() {
             
             <div className="flex justify-between items-center border-b border-orange-50 pb-3">
               <div>
-                <p className="text-[10px] font-bold text-primary font-mono tracking-wider uppercase block">AATHIA INCUBATION TRUST</p>
+                <p className="text-[10px] font-bold text-primary font-mono tracking-wider uppercase block">ATHIAA INCUBATION TRUST</p>
                 <h4 className="text-lg font-bold font-baloo text-deep">Charitable 80G Tax Invoice</h4>
               </div>
               <button 
@@ -732,7 +734,7 @@ export default function DashboardPage() {
               </div>
 
               <div className="space-y-1.5 text-[10px] text-gray-400">
-                <p><span className="font-bold text-deep font-sans">Aathia Registration:</span> CIT-EXPT/80G/ATH-ND2025</p>
+                <p><span className="font-bold text-deep font-sans">Athiaa Registration:</span> CIT-EXPT/80G/ATH-ND2025</p>
                 <p className="leading-normal">All contributions are fully eligible for 50% income-tax deductions conforming to Section 80G of the Indian Govt Income Tax Act, 1961.</p>
               </div>
             </div>

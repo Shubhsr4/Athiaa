@@ -1185,7 +1185,7 @@ export default function RescueHeatmap() {
           </div>
 
           <div className="pt-2 border-t border-slate-800/80 text-[10px] text-slate-500 font-mono flex items-center justify-between">
-            <span>AATHIA D3 ENGINE v2.4</span>
+            <span>ATHIAA D3 ENGINE v2.4</span>
             <span>DELHI NCR COVERAGE</span>
           </div>
         </div>

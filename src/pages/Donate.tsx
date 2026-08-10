@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Heart, 
   MapPin, 
@@ -43,6 +44,7 @@ const LOCAL_INITIAL_CAMPAIGNS = [
 ];
 
 export default function DonatePage() {
+  const { t } = useTranslation();
   const { 
     triggerAppletActionLoader, 
     setDonationHistory,
@@ -148,7 +150,7 @@ export default function DonatePage() {
 
   const handleCopyUPI = () => {
     if (navigator.clipboard) {
-      navigator.clipboard.writeText('aathia@upi');
+      navigator.clipboard.writeText('athiaa@upi');
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2005);
     }
@@ -239,10 +241,10 @@ export default function DonatePage() {
 
     if (scriptLoaded && (window as any).Razorpay) {
       const options = {
-        key: (import.meta as any).env?.VITE_RAZORPAY_KEY_ID || 'rzp_test_AathiaAnimalWelfare',
+        key: (import.meta as any).env?.VITE_RAZORPAY_KEY_ID || 'rzp_test_AthiaaAnimalWelfare',
         amount: finalAmount * 100, // amount in paise
         currency: 'INR',
-        name: 'Aathia Animal Welfare NGO',
+        name: 'Athiaa Animal Welfare NGO',
         description: `Donation for ${selectedCampaign}`,
         image: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=200',
         handler: function (response: any) {
@@ -277,13 +279,13 @@ export default function DonatePage() {
   };
 
   return (
-    <div id="aathia-donate-module" className="max-w-7xl mx-auto px-4 py-16 space-y-12 font-sans text-left">
+    <div id="athiaa-donate-module" className="max-w-7xl mx-auto px-4 py-16 space-y-12 font-sans text-left">
       {/* 1. Header & General Section */}
       <div className="space-y-2 text-center">
-        <span className="text-primary font-bold tracking-widest uppercase text-sm font-mono block">Fuel the Hope</span>
-        <h1 className="text-3xl md:text-5xl font-bold font-baloo text-deep">Your Small Action Heals Strays</h1>
+        <span className="text-primary font-bold tracking-widest uppercase text-sm font-mono block">{t('nav.donate')}</span>
+        <h1 className="text-3xl md:text-5xl font-bold font-baloo text-deep">{t('donate.title')}</h1>
         <p className="text-gray-600 max-w-xl mx-auto text-sm leading-relaxed">
-          Aathia runs fully on public philanthropy. Every rupee contributed feeds, vaccinating, or finances medical ICU kits. Empower us to restore hope.
+          {t('donate.subtitle')}
         </p>
       </div>
 
@@ -296,7 +298,7 @@ export default function DonatePage() {
             <div className="bg-white p-4 rounded-2xl shadow-sm border border-orange-50 shrink-0">
               <div className="w-32 h-32 bg-slate-100 flex flex-col items-center justify-center border border-gray-200 rounded-lg relative overflow-hidden">
                 <QrCode size={100} className="text-deep mb-1 opacity-90" />
-                <span className="text-[9px] font-bold text-primary font-mono tracking-wider">AATHIA@UPI</span>
+                <span className="text-[9px] font-bold text-primary font-mono tracking-wider">ATHIAA@UPI</span>
               </div>
             </div>
 
@@ -306,13 +308,13 @@ export default function DonatePage() {
                   <Zap size={10} />
                   <span>IMMEDIATE UPI CONVENIENCE</span>
                 </span>
-                <h3 className="text-xl font-bold font-baloo text-deep mt-1 leading-tight">Scan & Decipher Instantly</h3>
-                <p className="text-xs text-gray-600 mt-0.5">Use Google Pay, PhonePe, Paytm, or BHIM to pay instantly.</p>
+                <h3 className="text-xl font-bold font-baloo text-deep mt-1 leading-tight">{t('donate.qrCodeTitle')}</h3>
+                <p className="text-xs text-gray-600 mt-0.5">{t('donate.scanToPay')}</p>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-2 max-w-sm">
                 <div className="bg-white border border-gray-200 px-4 py-2 rounded-xl text-xs font-mono text-gray-700 font-semibold flex items-center justify-between flex-1 select-all">
-                  <span>aathia@upi</span>
+                  <span>athiaa@upi</span>
                   <button 
                     onClick={handleCopyUPI}
                     className="text-primary hover:text-primary-hover font-bold font-sans text-[11px] ml-2 flex items-center cursor-pointer"
@@ -343,7 +345,7 @@ export default function DonatePage() {
           <form onSubmit={handleStartDonateCheckout} className="bg-white p-8 rounded-3xl border border-orange-50 shadow-warm space-y-6">
             <h3 className="font-baloo text-2xl font-bold text-deep flex items-center space-x-2">
               <Heart size={22} className="text-primary fill-primary" />
-              <span>Custom Contribution Portal</span>
+              <span>{t('donate.selectAmount')}</span>
             </h3>
 
             {/* Monthly vs One time Toggle */}
@@ -353,14 +355,14 @@ export default function DonatePage() {
                 onClick={() => setIsMonthly(false)}
                 className={`flex-1 text-center py-2.5 rounded-xl text-xs font-bold transition cursor-pointer ${!isMonthly ? 'bg-primary text-white shadow-sm' : 'text-gray-500'}`}
               >
-                One-Time Gift
+                {t('donate.oneTime')}
               </button>
               <button 
                 type="button"
                 onClick={() => setIsMonthly(true)}
                 className={`flex-1 text-center py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1 cursor-pointer ${isMonthly ? 'bg-primary text-white shadow-sm' : 'text-gray-500'}`}
               >
-                <span>Monthly Guardian</span>
+                <span>{t('donate.monthly')}</span>
                 <span className="text-[9px] bg-[#F4C430] text-deep px-1.5 py-0.5 rounded-full font-bold">12A</span>
               </button>
             </div>
@@ -376,7 +378,7 @@ export default function DonatePage() {
                 <option value="General Rescue Fund">General Emergency Stray Patrol & Ambulance</option>
                 <option value="Project Niramaya: Emergency Medical Fund">Project Niramaya (Intensive ICU Surgeries)</option>
                 <option value="Mega ABC & Anti-Rabies Safe Streets Drive">Delhi / Mumbai Rabies & Sterilization (ABC)</option>
-                <option value="Rebuilding Aathia Bengaluru Sanctuary Roof">Leaky Sanctuary Roofing (Bengaluru Resident Dogs)</option>
+                <option value="Rebuilding Athiaa Bengaluru Sanctuary Roof">Leaky Sanctuary Roofing (Bengaluru Resident Dogs)</option>
               </select>
             </div>
 
@@ -492,7 +494,7 @@ export default function DonatePage() {
 
             <h3 className="text-xl font-bold font-baloo text-secondary leading-tight">Tax Free Charitable Exemption</h3>
             <p className="text-xs text-gray-300 leading-relaxed font-sans">
-              Aathia Animal Welfare registered is authorized as a Section 8 Nonprofit Organization. All Indian residents are eligible to save 50% on income-tax deductions.
+              Athiaa Animal Welfare registered is authorized as a Section 8 Nonprofit Organization. All Indian residents are eligible to save 50% on income-tax deductions.
             </p>
 
             <div className="border-t border-white/5 pt-3 grid grid-cols-2 gap-3 text-[10px] text-gray-400 font-mono">
@@ -585,7 +587,7 @@ export default function DonatePage() {
           </div>
           <h3 className="text-2xl font-bold font-baloo text-deep">Corporate CSR Partnerships</h3>
           <p className="text-xs text-gray-600 leading-relaxed">
-            Aathia welfare operates 100% compliant reporting indices under Schedule VII guidelines. Coordinate CSR donations towards building automated diagnostic mobile vans or funding district immunization buffers.
+            Athiaa welfare operates 100% compliant reporting indices under Schedule VII guidelines. Coordinate CSR donations towards building automated diagnostic mobile vans or funding district immunization buffers.
           </p>
           <button 
             type="button"
@@ -655,7 +657,7 @@ export default function DonatePage() {
             {checkoutStep === 1 && (
               <div className="p-6 space-y-5">
                 <div className="text-center space-y-1">
-                  <p className="text-gray-400 text-xs uppercase tracking-widest font-mono">Paying To: NGO Aathia</p>
+                  <p className="text-gray-400 text-xs uppercase tracking-widest font-mono">Paying To: NGO Athiaa</p>
                   <p className="text-2xl font-bold font-baloo text-deep">₹ {getActiveAmount().toLocaleString()}</p>
                   <p className="text-[10px] text-gray-500 font-semibold truncate bg-cream px-2 py-0.5 rounded-md inline-block max-w-xs">{selectedCampaign}</p>
                 </div>

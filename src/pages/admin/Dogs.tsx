@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/lib/hooks/useAuth';
@@ -6,16 +5,31 @@ import { useDogs } from '@/lib/hooks/useDogs';
 import { useDogMutations } from '@/lib/hooks/useDog';
 import { useToast } from '@/components/ui/Toast';
 import AdminSkeleton from '@/components/ui/AdminSkeleton';
-import { Plus, Edit2, Trash2, Search, SlidersHorizontal, Sliders, Star } from 'lucide-react';
+import ImageUploader from '../../components/ImageUploader';
+import { supabase } from '../../utils/supabase';
+import { Plus, Edit2, Trash2, Search, Star, X, Save, Loader2 } from 'lucide-react';
 
 export default function DogManagementPage() {
-  const { isAdmin, isLoading: authLoading } = useAuth();
+  const { user, isAdmin, isLoading: authLoading } = useAuth();
   const { deleteDog } = useDogMutations();
   const { toast, showToast } = useToast();
 
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [searchInput, setSearchInput] = useState<string>('');
   const [debouncedSearch, setDebouncedSearch] = useState<string>('');
+
+  // Modal State for Adding / Editing Dog
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [editingDogId, setEditingDogId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+
+  // Form Fields
+  const [name, setName] = useState<string>('');
+  const [breed, setBreed] = useState<string>('');
+  const [status, setStatus] = useState<string>('available');
+  const [gender, setGender] = useState<string>('male');
+  const [coverImageUrl, setCoverImageUrl] = useState<string>('');
+  const [story, setStory] = useState<string>('');
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -38,12 +52,88 @@ export default function DogManagementPage() {
     return null;
   }
 
-  const handleDelete = async (id: string, name: string) => {
-    if (window.confirm(`Are you absolutely sure you want to delete dog "${name}"? This action cannot be undone.`)) {
+  const openAddModal = () => {
+    setEditingDogId(null);
+    setName('');
+    setBreed('Indian Pariah');
+    setStatus('available');
+    setGender('male');
+    setCoverImageUrl('');
+    setStory('');
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (dog: any) => {
+    setEditingDogId(dog.id);
+    setName(dog.name || '');
+    setBreed(dog.breed || '');
+    setStatus(dog.status || 'available');
+    setGender(dog.gender || 'male');
+    setCoverImageUrl(dog.main_image_url || '');
+    setStory(dog.description || '');
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingDogId(null);
+  };
+
+  const handleSaveDog = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) {
+      showToast('Please enter dog name', 'error');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      if (editingDogId) {
+        // Update existing animal record in Supabase
+        const { error } = await supabase
+          .from('animals')
+          .update({
+            name,
+            species: breed || 'Indian Pariah',
+            status: status as any,
+            cover_image_url: coverImageUrl || 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=800',
+            story
+          })
+          .eq('id', editingDogId);
+
+        if (error) throw new Error(error.message);
+        showToast(`Successfully updated "${name}"`, 'success');
+      } else {
+        // Insert new animal record into Supabase
+        const { error } = await supabase
+          .from('animals')
+          .insert({
+            name,
+            species: breed || 'Indian Pariah',
+            status: status as any,
+            cover_image_url: coverImageUrl || 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=800',
+            story
+          });
+
+        if (error) throw new Error(error.message);
+        showToast(`Successfully added new dog "${name}"!`, 'success');
+      }
+
+      closeModal();
+      mutate();
+    } catch (err: any) {
+      showToast(err.message || 'Failed to save dog profile', 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async (id: string, dogName: string) => {
+    if (window.confirm(`Are you absolutely sure you want to delete dog "${dogName}"? This action cannot be undone.`)) {
       try {
         await deleteDog(id);
         mutate();
-        showToast(`Successfully deleted dog profiles for "${name}"`, 'success');
+        showToast(`Successfully deleted dog profile for "${dogName}"`, 'success');
       } catch (err: any) {
         showToast(err.message || 'Failed to delete dog', 'error');
       }
@@ -64,13 +154,13 @@ export default function DogManagementPage() {
           </div>
           <h1 className="text-3xl font-extrabold font-baloo text-slate-800">Dog Fleet Management</h1>
         </div>
-        <Link
+        <button
           id="add-dog-top-btn"
-          to="/admin/dogs/new"
-          className="bg-primary hover:bg-primary-hover text-white font-bold py-3 px-5 rounded-2xl text-xs font-baloo tracking-wide flex items-center gap-2 shadow-sm shrink-0 w-fit cursor-pointer"
+          onClick={openAddModal}
+          className="bg-primary hover:bg-primary-hover text-white font-bold py-3 px-5 rounded-2xl text-xs font-baloo tracking-wide flex items-center gap-2 shadow-sm shrink-0 w-fit cursor-pointer border-none"
         >
           <Plus size={16} /> Add New Dog
-        </Link>
+        </button>
       </div>
 
       {/* Filter Toolbar */}
@@ -108,7 +198,7 @@ export default function DogManagementPage() {
       {/* Main Listing Table */}
       <div className="bg-white border border-orange-50 rounded-3xl shadow-sm overflow-hidden">
         {dogsLoading ? (
-          <div className="p-16 text-center text-xs font-semibold text-gray-400">Querying live dog registers...</div>
+          <div className="p-16 text-center text-xs font-semibold text-gray-400 font-mono">Querying live dog registers...</div>
         ) : dogs && dogs.length > 0 ? (
           <div className="overflow-x-auto">
             <table id="dogs-admin-table" className="w-full text-left font-sans text-xs">
@@ -149,7 +239,7 @@ export default function DogManagementPage() {
                         {dog.status}
                       </span>
                     </td>
-                    <td className="py-3 px-2 text-center font-bold text-slate-500 capitalize">{dog.gender}</td>
+                    <td className="py-3 px-2 text-center font-bold text-slate-500 capitalize">{dog.gender || 'male'}</td>
                     <td className="py-3 px-2 text-center">
                       {dog.flags?.includes('featured') ? (
                         <Star size={14} className="text-amber-500 fill-amber-400 mx-auto" />
@@ -158,13 +248,13 @@ export default function DogManagementPage() {
                       )}
                     </td>
                     <td className="py-3 px-6 text-right space-x-1">
-                      <Link
+                      <button
                         id={`edit-dog-${dog.id}`}
-                        to={`/admin/dogs/${dog.id}/edit`}
-                        className="inline-flex items-center gap-1 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold px-3 py-2 rounded-xl text-[11px] border border-slate-200 transition"
+                        onClick={() => openEditModal(dog)}
+                        className="inline-flex items-center gap-1 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold px-3 py-2 rounded-xl text-[11px] border border-slate-200 transition cursor-pointer"
                       >
                         <Edit2 size={12} /> Edit
-                      </Link>
+                      </button>
                       <button
                         id={`delete-dog-${dog.id}`}
                         onClick={() => handleDelete(dog.id, dog.name)}
@@ -182,6 +272,127 @@ export default function DogManagementPage() {
           <div className="p-16 text-center text-slate-400 font-medium select-none">No dogs currently match the filter options.</div>
         )}
       </div>
+
+      {/* Add / Edit Dog Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-2xl border border-orange-100 max-h-[90vh] overflow-y-auto font-sans text-left">
+            <div className="flex items-center justify-between border-b pb-3">
+              <h3 className="text-lg font-extrabold font-baloo text-slate-800">
+                {editingDogId ? 'Edit Rescue Dog Profile' : 'Register New Rescue Dog'}
+              </h3>
+              <button
+                onClick={closeModal}
+                className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-slate-100 cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveDog} className="space-y-4">
+              {/* Image Uploader connected to animal-photos bucket */}
+              <ImageUploader
+                bucket="animal-photos"
+                folder="dogs"
+                label="Dog Photo (Uploads to Supabase Storage)"
+                value={coverImageUrl}
+                onChange={(url) => setCoverImageUrl(url)}
+              />
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Dog Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g. Bruno"
+                    className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs font-semibold outline-none focus:border-primary/50 text-slate-800"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Breed / Species</label>
+                  <input
+                    type="text"
+                    value={breed}
+                    onChange={(e) => setBreed(e.target.value)}
+                    placeholder="e.g. Indian Pariah"
+                    className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs font-semibold outline-none focus:border-primary/50 text-slate-800"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Status</label>
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs font-bold text-slate-750 outline-none"
+                  >
+                    <option value="available">Available for Adoption</option>
+                    <option value="foster">In Foster Care</option>
+                    <option value="medical_hold">Medical Hold</option>
+                    <option value="adopted">Adopted</option>
+                    <option value="deceased">Deceased</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Gender</label>
+                  <select
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs font-bold text-slate-750 outline-none"
+                  >
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Rescue Story / Description</label>
+                <textarea
+                  rows={3}
+                  value={story}
+                  onChange={(e) => setStory(e.target.value)}
+                  placeholder="Enter rescue notes, health history, temperament..."
+                  className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs font-medium text-slate-800 outline-none focus:border-primary/50 leading-relaxed"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-primary hover:bg-primary-hover flex items-center gap-1.5 shadow cursor-pointer border-none disabled:opacity-50"
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" /> Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={14} /> Save Profile
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

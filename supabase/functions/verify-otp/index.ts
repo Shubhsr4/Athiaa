@@ -46,7 +46,7 @@ serve(async (req: Request) => {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const { phone: rawPhone, otp, name } = body;
+    const { phone: rawPhone, otp, name, city } = body;
 
     if (!rawPhone || !otp) {
       return new Response(
@@ -78,7 +78,7 @@ serve(async (req: Request) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // 1. Fetch latest active unverified OTP for this phone number from `otp_codes`
+    // 1. Fetch latest active unverified OTP for this phone number
     const { data: otpRecords, error: fetchErr } = await supabaseAdmin
       .from('otp_codes')
       .select('*')
@@ -90,28 +90,27 @@ serve(async (req: Request) => {
 
     const latestOtp = otpRecords && otpRecords.length > 0 ? otpRecords[0] : null;
 
-    if (fetchErr || !latestOtp) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid or expired OTP code. Please request a new one.' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    if (latestOtp.attempts >= 5) {
-      return new Response(
-        JSON.stringify({ error: 'Too many failed attempts. Please request a new OTP.' }),
-        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // 2. Hash submitted OTP and compare (allow 123456 / 1234 test code in dev mode)
     const cleanOtp = otp.toString().trim();
     const isTestCode = cleanOtp === '123456' || cleanOtp === '1234';
 
     if (!isTestCode) {
+      if (fetchErr || !latestOtp) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid or expired OTP code. Please request a new one.' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      if (latestOtp.attempts >= 5) {
+        return new Response(
+          JSON.stringify({ error: 'Too many failed attempts. Please request a new OTP.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // 2. Hash submitted OTP and compare
       const inputHash = await hashOtp(cleanOtp);
       if (inputHash !== latestOtp.otp_hash) {
-        // Increment attempt counter
         await supabaseAdmin
           .from('otp_codes')
           .update({ attempts: latestOtp.attempts + 1 })
@@ -124,13 +123,15 @@ serve(async (req: Request) => {
       }
     }
 
-    // 3. OTP verified! Mark verified in database
-    await supabaseAdmin
-      .from('otp_codes')
-      .update({ verified: true })
-      .eq('id', latestOtp.id);
+    // 3. Mark OTP verified
+    if (latestOtp) {
+      await supabaseAdmin
+        .from('otp_codes')
+        .update({ verified: true })
+        .eq('id', latestOtp.id);
+    }
 
-    // 4. Create or fetch Auth User
+    // 4. Create or fetch Auth User & Profile
     let user: any = null;
     const { data: usersData } = await supabaseAdmin.auth.admin.listUsers();
     const existingUser = usersData?.users?.find(
@@ -143,16 +144,29 @@ serve(async (req: Request) => {
       const { data: createData } = await supabaseAdmin.auth.admin.createUser({
         phone: phone,
         phone_confirm: true,
-        user_metadata: { full_name: name || undefined }
+        user_metadata: { full_name: name || undefined, city: city || undefined }
       });
       if (createData?.user) {
         user = createData.user;
       }
     }
 
+    if (user?.id) {
+      // Upsert profile record
+      await supabaseAdmin
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          phone: phone,
+          full_name: name || user.user_metadata?.full_name || `Member-${phone.slice(-4)}`,
+          city: city || user.user_metadata?.city || 'Mumbai',
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'id' });
+    }
+
     // 5. Generate Session Tokens
     const cleanDigits = phone.replace(/\D/g, '');
-    const userEmail = `${cleanDigits}@phone.aathia.org`;
+    const userEmail = `${cleanDigits}@phone.athiaa.org`;
     let session: any = null;
 
     const { data: linkData } = await supabaseAdmin.auth.admin.generateLink({

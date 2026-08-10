@@ -1,18 +1,5 @@
-import useSWR from 'swr';
-import { defaultFetcher } from './fetcher';
-import { Dog, PaginationMeta } from '@/types';
-
-function serializeFilters(filters?: Record<string, any>): string {
-  if (!filters) return '';
-  const params = new URLSearchParams();
-  Object.entries(filters).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '') {
-      params.append(key, String(value));
-    }
-  });
-  const str = params.toString();
-  return str ? `?${str}` : '';
-}
+import { useEffect, useState, useCallback } from 'react';
+import { supabase } from '@/src/utils/supabase';
 
 export function useDogs(filters?: {
   status?: string;
@@ -24,21 +11,86 @@ export function useDogs(filters?: {
   page?: number;
   per_page?: number;
 }) {
-  const serializedFilters = serializeFilters(filters);
-  
-  const { data, error, isLoading, mutate } = useSWR(
-    ['/api/dogs', serializedFilters],
-    async ([url, query]) => {
-      const res = await defaultFetcher(`${url}${query}`);
-      return res;
+  const [dogs, setDogs] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<any>(null);
+
+  const fetchDogs = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      let query = supabase
+        .from('animals')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (filters?.status && filters.status !== 'all') {
+        if (filters.status === 'available') {
+          query = query.in('status', ['rescued', 'under_treatment', 'fostered']);
+        } else {
+          query = query.eq('status', filters.status as any);
+        }
+      } else {
+        query = query.in('status', ['rescued', 'under_treatment', 'fostered']);
+      }
+
+      const { data, error: err } = await query;
+
+      if (err) throw err;
+      setDogs(data || []);
+    } catch (err: any) {
+      console.error('Error fetching animals for adoption:', err);
+      setError(err);
+    } finally {
+      setIsLoading(false);
     }
-  );
+  }, [filters?.status]);
+
+  useEffect(() => {
+    let channel: any = null;
+
+    fetchDogs();
+
+    // Attach Realtime subscription for animals table
+    channel = supabase
+      .channel('public:animals_adopt')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'animals' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newAnimal = payload.new;
+            if (['rescued', 'under_treatment', 'fostered'].includes(newAnimal.status)) {
+              setDogs((prev) => [newAnimal, ...prev.filter((a) => a.id !== newAnimal.id)]);
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedAnimal = payload.new;
+            if (!['rescued', 'under_treatment', 'fostered'].includes(updatedAnimal.status)) {
+              // Automatically remove from public Adopt page when marked adopted or deceased
+              setDogs((prev) => prev.filter((a) => a.id !== updatedAnimal.id));
+            } else {
+              setDogs((prev) =>
+                prev.map((a) => (a.id === updatedAnimal.id ? updatedAnimal : a))
+              );
+            }
+          } else if (payload.eventType === 'DELETE') {
+            const deletedAnimal = payload.old;
+            setDogs((prev) => prev.filter((a) => a.id !== deletedAnimal.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [fetchDogs]);
 
   return {
-    dogs: (data?.data as Dog[]) || [],
-    meta: (data?.meta as PaginationMeta) || { total: 0, page: 1, per_page: 20, total_pages: 1 },
+    dogs,
     isLoading,
     error,
-    mutate,
+    mutate: fetchDogs
   };
 }

@@ -1,10 +1,12 @@
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MessageCircle, ShieldAlert, Stethoscope, Car, Camera, ShieldCheck, Check, ChevronRight } from 'lucide-react';
 import { useAppContext } from '@/components/providers/AppContext';
 import { useMyVolunteerStatus, useVolunteerMutations } from '@/lib/hooks/useVolunteers';
 
 export default function VolunteerPage() {
+  const { t } = useTranslation();
   const { triggerAppletActionLoader } = useAppContext();
   const { volunteer, isLoading, error } = useMyVolunteerStatus();
   const { applyAsVolunteer } = useVolunteerMutations();
@@ -23,7 +25,7 @@ export default function VolunteerPage() {
       try {
         await applyAsVolunteer({
           name: volunteerForm.name,
-          email: `${volunteerForm.phone}@aathia.org`,
+          email: `${volunteerForm.phone}@athiaa.org`,
           phone: volunteerForm.phone,
           city: volunteerForm.city,
           role: volunteerForm.role,
@@ -49,12 +51,12 @@ export default function VolunteerPage() {
   if (error) return null;
 
   return (
-    <div id="aathia-volunteer-view" className="max-w-7xl mx-auto px-4 py-16 relative space-y-12 text-left font-sans">
+    <div id="athiaa-volunteer-view" className="max-w-7xl mx-auto px-4 py-16 relative space-y-12 text-left font-sans">
       <div className="text-center space-y-2">
         <span className="text-primary font-bold tracking-widest uppercase text-sm font-mono block">Become a Street Shield</span>
         <h1 className="text-3xl md:text-5xl font-bold font-baloo text-deep">Join our Indian Volunteer Force</h1>
         <p className="text-gray-600 max-w-xl mx-auto text-sm leading-relaxed">
-          Aathia operations are powered by local citizens! Choose from active roles and sync directly inside your city's WhatsApp Volunteer sub-chat.
+          Athiaa operations are powered by local citizens! Choose from active roles and sync directly inside your city's WhatsApp Volunteer sub-chat.
         </p>
       </div>
 

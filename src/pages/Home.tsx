@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Heart, 
@@ -124,8 +125,8 @@ const LOCAL_INITIAL_CAMPAIGNS = [
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { 
-    language, 
     triggerAppletActionLoader, 
     setSelectedDogForProfile 
   } = useAppContext();
@@ -149,7 +150,7 @@ export default function HomePage() {
   const rawStories = dbStories && dbStories.length > 0 ? dbStories : DEFAULT_SUCCESS_STORIES;
   const storiesList = (rawStories || []).map((story: any) => ({
     id: story.id,
-    dogName: story.dogName || story.title || 'Aathia Dog',
+    dogName: story.dogName || story.title || 'Athiaa Dog',
     city: story.city || 'Mumbai',
     quote: story.quote || story.content || '',
     update: story.update || story.content || '',
@@ -183,21 +184,21 @@ export default function HomePage() {
   };
 
   // Stats counting state simulation
-  const [stats, setStats] = useState({ rescued: 2310, adopted: 1845, vaccinated: 4520, cities: 6 });
+  const [stats, setStats] = useState({ rescued: 4800, adopted: 80, vaccinated: 3900, volunteers: 280 });
 
   useEffect(() => {
     // Soft animated tick-up of stats initially
     const interval = setInterval(() => {
       setStats(prev => {
-        if (prev.rescued >= 2450) {
+        if (prev.rescued >= 5124) {
           clearInterval(interval);
-          return { rescued: 2450, adopted: 1980, vaccinated: 4890, cities: 6 };
+          return { rescued: 5124, adopted: 130, vaccinated: 4230, volunteers: 350 };
         }
         return {
-          rescued: prev.rescued + 7,
-          adopted: prev.adopted + 6,
-          vaccinated: prev.vaccinated + 15,
-          cities: 6
+          rescued: prev.rescued + 10,
+          adopted: prev.adopted + 2,
+          vaccinated: prev.vaccinated + 10,
+          volunteers: prev.volunteers + 2
         };
       });
     }, 30);
@@ -302,7 +303,7 @@ export default function HomePage() {
     }
   };
 
-  // Indian cities active in Aathia
+  // Indian cities active in Athiaa
   const indiaCities = [
     { name: 'Mumbai', x: '30%', y: '68%', rescued: 840, activeFeeders: 120, vetPartners: 8 },
     { name: 'Bengaluru', x: '42%', y: '85%', rescued: 890, activeFeeders: 190, vetPartners: 11 },
@@ -312,7 +313,7 @@ export default function HomePage() {
   ];
 
   return (
-    <div id="aathia-home-view" className="space-y-16 pb-12">
+    <div id="athiaa-home-view" className="space-y-16 pb-12">
       {/* 1. HERO SECTION */}
       <section className="relative min-h-[90vh] flex flex-col justify-center overflow-hidden bg-gradient-to-br from-cream via-[#FFF3EA] to-white pt-24 px-4 md:px-8">
         {/* Floating background graphic bindi hearts */}
@@ -323,16 +324,15 @@ export default function HomePage() {
           <div className="lg:col-span-7 space-y-6 text-left">
             <div className="inline-flex items-center space-x-2 bg-primary/10 border border-primary/20 px-4 py-2 rounded-full text-primary font-medium text-xs md:text-sm">
               <span className="animate-ping w-2 h-2 rounded-full bg-primary inline-block mr-1"></span>
-              <span className="font-tiro text-sm">हर पंजे में एक कहानी</span>
-              <span>• Every Paw Has a Story</span>
+              <span className="font-tiro text-sm">{t('nav.tagline')}</span>
             </div>
             
             <h1 className="text-5xl md:text-7xl font-bold font-baloo leading-none text-deep">
-              Give a Second Life to India’s <span className="text-primary underline decoration-secondary decoration-wavy">Rescues</span>
+              {t('hero.title')} <span className="text-primary underline decoration-secondary decoration-wavy">{t('hero.titleHighlight')}</span>
             </h1>
             
             <p className="text-gray-700 text-lg md:text-xl max-w-xl font-sans">
-              Aathia is a dedicated rescue and rehabilitation alliance saving, nurturing, and rehoming dogs, cats, cows, hamsters, rabbits, and other orphaned animal souls across India.
+              {t('hero.subtitle')}
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
@@ -342,7 +342,7 @@ export default function HomePage() {
                 className="bg-gradient-to-r from-[#E8572A] to-[#FF804F] hover:from-primary-hover hover:to-primary text-white text-base font-semibold px-8 py-4 rounded-2xl shadow-warm hover:shadow-warm-lg hover:-translate-y-1 transition duration-300 flex items-center justify-center space-x-2 cursor-pointer"
               >
                 <PawPrint size={18} />
-                <span>Adopt a Rescue Animal</span>
+                <span>{t('hero.adoptCta')}</span>
                 <ArrowRight size={18} />
               </button>
               <button 
@@ -351,7 +351,7 @@ export default function HomePage() {
                 className="bg-white hover:bg-cream text-primary border-2 border-primary/20 text-base font-semibold px-8 py-4 rounded-2xl hover:-translate-y-1 transition duration-300 flex items-center justify-center space-x-2 shadow-sm cursor-pointer"
               >
                 <Heart size={18} className="fill-primary" />
-                <span>Donate Instantly</span>
+                <span>{t('hero.donateCta')}</span>
               </button>
             </div>
           </div>
@@ -399,7 +399,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto w-full pt-16 pb-4">
           <div className="flex items-center space-x-2 text-primary font-semibold mb-4 px-2">
             <AlertCircle size={20} className="animate-pulse" />
-            <span className="uppercase text-sm tracking-widest font-mono">Urgent Assistance Demanded</span>
+            <span className="uppercase text-sm tracking-widest font-mono">{t('urgentCare.badge')}</span>
           </div>
           
           <div className="flex space-x-4 overflow-x-auto pb-4 px-2 no-scrollbar scroll-smooth">
@@ -421,14 +421,16 @@ export default function HomePage() {
                 <div className="flex-1 text-left flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full">URGENT CARE</span>
+                      <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full">{t('urgentCare.criticalStatus')}</span>
                       <span className="text-xs text-gray-500 font-mono flex items-center"><MapPin size={10} className="mr-0.5" />{dog.city}</span>
                     </div>
+                    {/* TODO: dynamic content — needs bilingual DB columns if translation required */}
                     <h4 className="text-lg font-bold text-deep mt-1 font-baloo leading-tight">{dog.name}</h4>
                     <p className="text-xs text-gray-600 line-clamp-1">{dog.rescueStory}</p>
                   </div>
                   <span className="text-xs font-semibold text-primary flex items-center space-x-1 hover:underline">
-                    <span>Help save {dog.name}</span>
+                    {/* TODO: dynamic content — needs bilingual DB columns if translation required */}
+                    <span>{t('urgentCare.helpSave')} {dog.name}</span>
                     <ArrowRight size={12} />
                   </span>
                 </div>
@@ -444,32 +446,32 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-radial-gradient from-transparent to-black/40 pointer-events-none" />
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center relative z-10 font-sans">
             <div className="space-y-1">
-              <p className="text-orange-400 text-3xl md:text-5xl font-extrabold font-baloo">{stats.rescued}+</p>
-              <p className="text-gray-300 text-xs md:text-sm font-semibold tracking-wider uppercase">Animals Rescued</p>
+              <p className="text-orange-400 text-3xl md:text-5xl font-extrabold font-baloo">{t('hero.savedCount')}</p>
+              <p className="text-gray-300 text-xs md:text-sm font-semibold tracking-wider uppercase">{t('hero.savedLabel')}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-secondary text-3xl md:text-5xl font-extrabold font-baloo">{stats.adopted}+</p>
-              <p className="text-gray-300 text-xs md:text-sm font-semibold tracking-wider uppercase">Warm Adoptions</p>
+              <p className="text-[#F4C430] text-3xl md:text-5xl font-extrabold font-baloo">{t('hero.adoptionsCount')}</p>
+              <p className="text-gray-300 text-xs md:text-sm font-semibold tracking-wider uppercase">{t('hero.adoptionsLabel')}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-accent text-3xl md:text-5xl font-extrabold font-baloo">{stats.vaccinated}+</p>
-              <p className="text-gray-300 text-xs md:text-sm font-semibold tracking-wider uppercase">Vaccinated Free</p>
+              <p className="text-accent text-3xl md:text-5xl font-extrabold font-baloo">{t('hero.spayedCount')}</p>
+              <p className="text-gray-300 text-xs md:text-sm font-semibold tracking-wider uppercase">{t('hero.spayedLabel')}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-sky-400 text-3xl md:text-5xl font-extrabold font-baloo">{stats.cities}</p>
-              <p className="text-gray-300 text-xs md:text-sm font-semibold tracking-wider uppercase">Cities Active</p>
+              <p className="text-sky-400 text-3xl md:text-5xl font-extrabold font-baloo">{t('hero.volunteersCount')}</p>
+              <p className="text-gray-300 text-xs md:text-sm font-semibold tracking-wider uppercase">{t('hero.volunteersLabel')}</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* 3. MISSION SECTION */}
-      <section className="max-w-7xl mx-auto px-4 space-y-10 text-center">
-        <div className="space-y-2">
-          <span className="text-primary font-bold tracking-widest uppercase text-sm font-mono">Our Pure Cycle</span>
-          <h2 className="text-3xl md:text-5xl font-bold font-baloo text-deep">Rescue • Rehabilitate • Rehome</h2>
-          <p className="text-gray-600 max-w-xl mx-auto font-sans">
-            How we dedicate daily efforts to building harmonious human-animal friendships in Indian metropolitan zones.
+      <section className="max-w-7xl mx-auto px-4 space-y-10 text-center py-6">
+        <div className="space-y-3">
+          <span className="text-primary font-bold tracking-widest uppercase text-xs md:text-sm font-mono block">{t('home.howItWorksBadge')}</span>
+          <h2 className="text-3xl md:text-5xl font-bold font-baloo text-deep">{t('home.howItWorksTitle')}</h2>
+          <p className="text-gray-600 max-w-xl mx-auto font-sans text-sm md:text-base leading-relaxed pt-1">
+            {t('home.howItWorksSubtitle')}
           </p>
         </div>
 
@@ -479,13 +481,13 @@ export default function HomePage() {
               <div className="w-14 h-14 rounded-2xl bg-orange-100 flex items-center justify-center text-primary text-2xl font-bold shadow-sm">
                 <ShieldAlert className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-2xl font-bold font-baloo text-deep">1. Search & Rescue</h3>
+              <h3 className="text-2xl font-bold font-baloo text-deep">{t('home.step1Title')}</h3>
               <p className="text-gray-600 text-sm font-sans line-clamp-4">
-                We manage a designated WhatsApp helpline panel. If anyone spots a stray dog, injured cat, abandoned calf, or trapped animal in distress on metropolitan streets, we deploy our quick rescue ambulance teams.
+                {t('home.step1Desc')}
               </p>
             </div>
             <button onClick={() => triggerAppletActionLoader("Opening Rescue Dispatch...", "Locating nearest responder nodes...", () => navigate('/rescue'))} className="flex items-center space-x-2 text-primary font-bold mt-6 hover:underline group cursor-pointer">
-              <span>View Rescue Map</span>
+              <span>{t('nav.rescue')}</span>
               <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
@@ -495,13 +497,13 @@ export default function HomePage() {
               <div className="w-14 h-14 rounded-2xl bg-yellow-100 flex items-center justify-center text-[#F4C430] text-2xl font-bold shadow-sm">
                 <Activity className="w-6 h-6 text-[#F4C430]" />
               </div>
-              <h3 className="text-2xl font-bold font-baloo text-deep">2. Intensive Rehab</h3>
+              <h3 className="text-2xl font-bold font-baloo text-deep">{t('home.step2Title')}</h3>
               <p className="text-gray-600 text-sm font-sans line-clamp-4">
-                At our partner animal shelters and medical fields, we perform surgeries, administer critical vaccinations, provide physical therapy for disabled tripods, and build trust in timid animals through humane care.
+                {t('home.step2Desc')}
               </p>
             </div>
             <button onClick={() => triggerAppletActionLoader("Locating Shelters...", "Compiling contact numbers...", () => navigate('/contact'))} className="flex items-center space-x-2 text-primary font-bold mt-6 hover:underline group cursor-pointer">
-              <span>Our Vet Partners</span>
+              <span>{t('nav.contact')}</span>
               <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
@@ -511,13 +513,13 @@ export default function HomePage() {
               <div className="w-14 h-14 rounded-2xl bg-green-100 flex items-center justify-center text-accent text-2xl font-bold shadow-sm">
                 <HomeIcon className="w-6 h-6 text-accent" />
               </div>
-              <h3 className="text-2xl font-bold font-baloo text-deep">3. Happy Rehoming</h3>
+              <h3 className="text-2xl font-bold font-baloo text-deep">{t('home.step3Title')}</h3>
               <p className="text-gray-600 text-sm font-sans line-clamp-4">
-                We believe native stray animals are incredibly smart, loyal, and uniquely resilient. We organize weekend adoption pop-ups to find warm homes, verifying families to safeguard life-long bonds.
+                {t('home.step3Desc')}
               </p>
             </div>
             <button onClick={() => triggerAppletActionLoader("Scanning Companions...", "Accessing legal lists...", () => navigate('/adopt'))} className="flex items-center space-x-2 text-primary font-bold mt-6 hover:underline group cursor-pointer">
-              <span>Browse Adoptable Animals</span>
+              <span>{t('home.viewAllAnimals')}</span>
               <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
@@ -752,7 +754,7 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-4 space-y-10 text-center">
         <div className="space-y-2">
           <span className="text-primary font-bold tracking-widest uppercase text-sm font-mono">Our Footprints Map</span>
-          <h2 className="text-3xl md:text-5xl font-bold font-baloo text-deep">Aathia Delhi Rescue Footprints</h2>
+          <h2 className="text-3xl md:text-5xl font-bold font-baloo text-deep">Athiaa Delhi Rescue Footprints</h2>
           <p className="text-gray-600 max-w-xl mx-auto font-sans">
             Tap a pulsing location dot to see live emergency rescue calls and active volunteer dispatches on site in Delhi.
           </p>
@@ -786,7 +788,7 @@ export default function HomePage() {
               </div>
 
               <p className="text-xs text-gray-600 font-sans leading-relaxed">
-                Aathia coordinates fully functional ambulatory networks, local volunteer group WhatsApp listings, and ABC camps inside Delhi NCR.
+                Athiaa coordinates fully functional ambulatory networks, local volunteer group WhatsApp listings, and ABC camps inside Delhi NCR.
               </p>
 
               <div className="pt-2">
@@ -814,7 +816,7 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-4 space-y-12">
         <div className="space-y-2 text-center">
           <span className="text-primary font-bold tracking-widest uppercase text-sm font-mono font-bold">5-Step Life Cycle</span>
-          <h2 className="text-3xl md:text-5xl font-bold font-baloo text-deep">How Aathia Saves a Life</h2>
+          <h2 className="text-3xl md:text-5xl font-bold font-baloo text-deep">How Athiaa Saves a Life</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6 text-left">
@@ -907,7 +909,7 @@ export default function HomePage() {
           {whatsappJoined ? (
             <div className="p-4 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 text-emerald-400 space-y-2 max-w-sm mx-auto">
               <p className="font-bold font-baloo text-lg">Pranam, welcome!</p>
-              <p className="text-xs text-emerald-200">You are now registered as an Aathia Community Member. Check your WhatsApp inbox!</p>
+              <p className="text-xs text-emerald-200">You are now registered as an Athiaa Community Member. Check your WhatsApp inbox!</p>
             </div>
           ) : !otpSent ? (
             <form onSubmit={handleWhatsappSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">

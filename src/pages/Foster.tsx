@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Check, Heart } from 'lucide-react';
 import { apiFetch } from '@/lib/api/clientApi';
 import { Dog } from '@/src/types';
@@ -46,6 +47,7 @@ const LOCAL_INITIAL_DOGS = [
 ];
 
 export default function FosterPage() {
+  const { t } = useTranslation();
   const { triggerAppletActionLoader, setFosterRecords } = useAppContext();
 
   const handleTrackFoster = (record: any) => {
@@ -87,7 +89,7 @@ export default function FosterPage() {
           body: JSON.stringify({
             category: 'foster',
             name: fosterForm.name,
-            email: `${fosterForm.phone}@aathia.org`,
+            email: `${fosterForm.phone}@athiaa.org`,
             phone: fosterForm.phone,
             subject: `Foster Interest: ${targetDog?.name || 'Any Dog'}`,
             message: `Foster Duration: ${fosterForm.duration}. Active City: ${fosterForm.city}.`
@@ -115,7 +117,7 @@ export default function FosterPage() {
   };
 
   return (
-    <div id="aathia-foster-view" className="max-w-7xl mx-auto px-4 py-16 relative space-y-12 text-left font-sans">
+    <div id="athiaa-foster-view" className="max-w-7xl mx-auto px-4 py-16 relative space-y-12 text-left font-sans">
       {/* Header */}
       <div className="text-center space-y-2">
         <span className="text-primary font-bold tracking-widest uppercase text-sm font-mono block">Temporary Love, Big Relief</span>
@@ -133,13 +135,13 @@ export default function FosterPage() {
             <div className="space-y-2">
               <p className="text-accent font-bold text-lg">What Fostering Means</p>
               <p className="text-xs text-gray-650 leading-relaxed font-sans">
-                You opening your gate to look after a pup for a short time while Aathia screens permanent adopters. This is incredibly helpful for terrified, shy dogs to learn that humans are safe.
+                You opening your gate to look after a pup for a short time while Athiaa screens permanent adopters. This is incredibly helpful for terrified, shy dogs to learn that humans are safe.
               </p>
             </div>
             <div className="space-y-2">
-              <p className="text-primary font-bold text-lg">Aathia Provisioning</p>
+              <p className="text-primary font-bold text-lg">Athiaa Provisioning</p>
               <p className="text-xs text-gray-650 leading-relaxed">
-                We supply 100% of the food, steel bowls, leashes, and vaccine medicine. Your local vet hub consultations are also paid entirely by Aathia. You only provide warmth!
+                We supply 100% of the food, steel bowls, leashes, and vaccine medicine. Your local vet hub consultations are also paid entirely by Athiaa. You only provide warmth!
               </p>
             </div>
           </div>

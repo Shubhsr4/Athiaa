@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useCampaigns, useCampaignMutations } from '@/lib/hooks/useCampaigns';
-import { FileUpload } from '@/components/ui/FileUpload';
+import ImageUploader from '../../components/ImageUploader';
 import { useToast } from '@/components/ui/Toast';
 import AdminSkeleton from '@/components/ui/AdminSkeleton';
 import { Plus, Edit2, CheckCircle2, XCircle, Save, Percent, Target } from 'lucide-react';
@@ -251,19 +251,13 @@ export default function CampaignManagementPage() {
               />
             </div>
 
-            <div className="space-y-1 block">
-              <label className="text-[10px] font-bold text-gray-500 uppercase">Cover Banner Image</label>
-              <FileUpload
-                bucket="campaign-covers"
-                path="covers"
-                currentUrl={imageUrl || undefined}
-                onUploadComplete={(result) => {
-                  if (result) setImageUrl(result.public_url);
-                  else setImageUrl('');
-                }}
-                onError={(err) => showToast(err, 'error')}
-              />
-            </div>
+            <ImageUploader
+              bucket="campaign-covers"
+              folder="covers"
+              label="Cover Banner Image (Uploads to Supabase Storage)"
+              value={imageUrl}
+              onChange={(url) => setImageUrl(url)}
+            />
 
             <label className="flex items-center gap-2.5 p-3 bg-slate-50 rounded-xl cursor-pointer">
               <input

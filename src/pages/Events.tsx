@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Calendar, Clock, MapPin, Check, ChevronRight } from 'lucide-react';
 import { useAppContext } from '@/components/providers/AppContext';
 import { useEvents, useEventMutations } from '@/lib/hooks/useEvents';
@@ -30,6 +31,7 @@ const LOCAL_INITIAL_EVENTS = [
 ];
 
 export default function EventsPage() {
+  const { t } = useTranslation();
   const { triggerAppletActionLoader } = useAppContext();
   const { events: dbEvents, isLoading, error } = useEvents();
   const { registerForEvent } = useEventMutations();
@@ -72,10 +74,10 @@ export default function EventsPage() {
   if (error) return null;
 
   return (
-    <div id="aathia-events-view" className="max-w-7xl mx-auto px-4 py-16 relative space-y-12 text-left font-sans">
+    <div id="athiaa-events-view" className="max-w-7xl mx-auto px-4 py-16 relative space-y-12 text-left font-sans">
       <div className="text-center space-y-2">
         <span className="text-primary font-bold tracking-widest uppercase text-sm font-mono block">Canine Popups & Vaccine Camps</span>
-        <h1 className="text-3xl md:text-5xl font-bold font-baloo text-deep">Upcoming Aathia Events</h1>
+        <h1 className="text-3xl md:text-5xl font-bold font-baloo text-deep">Upcoming Athiaa Events</h1>
         <p className="text-gray-600 max-w-xl mx-auto text-sm leading-relaxed">
           Interact, volunteer, or adopt! We organize weekend adoption camps and rabies drives inside major public parks in India.
         </p>

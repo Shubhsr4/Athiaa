@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
   Heart, 
   Menu, 
@@ -25,10 +26,9 @@ import DogRunningLoader from '@/components/ui/DogRunningLoader';
 export default function LayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = useLocation().pathname || '/';
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
   const { profile, signOut } = useAuth();
   const {
-    language,
-    setLanguage,
     cartItems,
     setCartItems,
     cartOpen,
@@ -58,42 +58,22 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
     });
   };
 
-  // HELP BILINGUAL LABELS MATRIX
-  const labels: Record<string, Record<'EN' | 'HI', string>> = {
-    brandName: { EN: "Aathia", HI: "आथिया" },
-    tagline: { EN: "Har Panje Mein Ek Kahani", HI: "हर पंजे में एक कहानी" },
-    home: { EN: "Home", HI: "मुख्य पृष्ठ" },
-    adopt: { EN: "Adopt", HI: "गोद लें" },
-    donate: { EN: "Donate", HI: "दान करें" },
-    rescue: { EN: "Rescue & Report", HI: "बचाव व सूचना" },
-    foster: { EN: "Foster", HI: "पालक बनें" },
-    success: { EN: "Success Stories", HI: "सफल कहानियां" },
-    volunteer: { EN: "Volunteer", HI: "स्वयंसेवक" },
-    events: { EN: "Events", HI: "गतिविधियाँ" },
-    shop: { EN: "Shop", HI: "दुकान" },
-    about: { EN: "About Us", HI: "हमारे बारे में" },
-    blog: { EN: "Blog/Guides", HI: "ब्लॉग मार्गदर्शन" },
-    contact: { EN: "Contact", HI: "संपर्क" },
-    dashboard: { EN: "Account", HI: "खाता" },
-    emergencyHotline: { EN: "Trauma Hotline (24/7)", HI: "हेल्पलाइन नंबर (२४/७)" }
-  };
+  const currentLangLabel = i18n.language?.toLowerCase().startsWith('hi') ? 'HI' : 'EN';
 
   const menuItems = [
-    { key: 'home', txt: labels.home[language], path: '/' },
-    { key: 'adopt', txt: labels.adopt[language], path: '/adopt' },
-    { key: 'donate', txt: labels.donate[language], path: '/donate' },
-    { key: 'rescue', txt: labels.rescue[language], path: '/rescue' }
+    { key: 'home', txt: t('nav.home'), path: '/' },
+    { key: 'adopt', txt: t('nav.adopt'), path: '/adopt' },
+    { key: 'donate', txt: t('nav.donate'), path: '/donate' },
+    { key: 'rescue', txt: t('nav.rescue'), path: '/rescue' }
   ];
 
   const communityItems = [
-    { key: 'foster', txt: labels.foster[language], path: '/foster' },
-    { key: 'success', txt: labels.success[language], path: '/success-stories' },
-    { key: 'volunteer', txt: labels.volunteer[language], path: '/volunteer' },
-    { key: 'events', txt: labels.events[language], path: '/events' },
-    { key: 'shop', txt: labels.shop[language], path: '/shop' },
-    { key: 'about', txt: labels.about[language], path: '/about' },
-    { key: 'blog', txt: labels.blog[language], path: '/blog' },
-    { key: 'contact', txt: labels.contact[language], path: '/contact' }
+    { key: 'foster', txt: t('nav.foster'), path: '/foster' },
+    { key: 'success', txt: t('nav.success'), path: '/success-stories' },
+    { key: 'volunteer', txt: t('nav.volunteer'), path: '/volunteer' },
+    { key: 'events', txt: t('nav.events'), path: '/events' },
+    { key: 'about', txt: t('nav.about'), path: '/about' },
+    { key: 'contact', txt: t('nav.contact'), path: '/contact' }
   ];
 
   return (
@@ -137,10 +117,10 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
 
             <div className="text-left font-sans leading-none">
               <div className="flex items-baseline space-x-1.5">
-                <span className="text-xl md:text-2xl font-bold font-baloo tracking-tight text-[#1C1C2E] uppercase">{labels.brandName[language]}</span>
+                <span className="text-xl md:text-2xl font-bold font-baloo tracking-tight text-[#1C1C2E] uppercase">{t('nav.brandName')}</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block"></span>
               </div>
-              <p className="text-[9px] md:text-[10px] text-gray-500 font-mono tracking-wide mt-0.5">{labels.tagline[language]}</p>
+              <p className="text-[9px] md:text-[10px] text-gray-500 font-mono tracking-wide mt-0.5">{t('nav.tagline')}</p>
             </div>
           </Link>
 
@@ -164,8 +144,8 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
 
             {/* Dropdown for other pages */}
             <div className="relative group/more">
-              <button className="px-3 py-2 hover:bg-cream rounded-xl flex items-center space-x-1">
-                <span>Community Guides</span>
+              <button className="px-3 py-2 hover:bg-cream rounded-xl flex items-center space-x-1 cursor-pointer">
+                <span>More</span>
                 <span className="text-[10px] text-gray-400">▼</span>
               </button>
               
@@ -189,35 +169,21 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
             </div>
           </nav>
 
-          {/* Right corner indicators: Lang, Cart, Dashboard, Mobile humburger */}
+          {/* Right corner indicators: Lang, Dashboard, Mobile humburger */}
           <div className="flex items-center space-x-2 md:space-x-3">
             
             {/* Bilingual Language Switcher */}
             <button 
               onClick={() => {
-                const nextLang = language === 'EN' ? 'HI' : 'EN';
-                setLanguage(nextLang);
-                triggerAppletActionLoader("Changing Interface Language...", nextLang === 'HI' ? "हिंदी अनुवाद अनुकूलन लोड हो रहा है..." : "Syncing international typography metrics...");
+                const nextLang = i18n.language?.toLowerCase().startsWith('hi') ? 'en' : 'hi';
+                i18n.changeLanguage(nextLang);
+                triggerAppletActionLoader("Changing Interface Language...", nextLang === 'hi' ? "हिंदी अनुवाद अनुकूलन लोड हो रहा है..." : "Syncing international typography metrics...");
               }}
-              className="p-2.5 bg-cream/80 hover:bg-cream border border-orange-50 rounded-xl text-xs font-extrabold flex items-center space-x-1"
+              className="p-2.5 bg-cream/80 hover:bg-orange-100 border border-orange-100 hover:border-primary/40 rounded-xl text-xs font-extrabold flex items-center space-x-1.5 cursor-pointer transition-all duration-200 shadow-xs hover:shadow-sm select-none"
               title="Change Language"
             >
-              <Globe size={13} className="text-gray-500" />
-              <span>{language}</span>
-            </button>
-
-            {/* Simulated Merch Shopping Cart */}
-            <button 
-              onClick={() => setCartOpen(true)}
-              className="p-2.5 bg-cream/80 hover:bg-cream border border-orange-50 rounded-xl relative flex items-center font-bold"
-              title="Charity Merch Basket"
-            >
-              <ShoppingBag size={14} className="text-gray-500" />
-              {cartItems.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-primary text-white text-[8px] font-extrabold w-4.5 h-4.5 rounded-full flex items-center justify-center animate-pulse">
-                  {cartItems.reduce((acc, c) => acc + c.quantity, 0)}
-                </span>
-              )}
+              <Globe size={14} className="text-primary" />
+              <span className="text-deep font-bold">{currentLangLabel}</span>
             </button>
 
             {/* Profile Avatar / Login Action */}

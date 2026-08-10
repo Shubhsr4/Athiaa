@@ -14,7 +14,7 @@ const ANIMAL_FUN_FACTS = [
   "Indian Calico cats Meenu are almost always female due to unique genetics of coat pigmentation!",
   "Dwarf Hamster Golu can run up to 8 kilometers a night on his cozy exercise wheel!",
   "Rabbits display peak happiness by doing 'binkies'—vertical jumps with twists in the air!",
-  "Aathia channels 100% of fundraising receipts straight to surgical caches & veteran aid.",
+  "Athiaa channels 100% of fundraising receipts straight to surgical caches & veteran aid.",
   "Street native animals are incredibly intelligent, loyal, and master human emotional cues easily!",
   "Regular deworming and street vaccinations stop standard canine rabies vectors entirely."
 ];
@@ -53,7 +53,7 @@ export default function DogRunningLoader({
 
   return (
     <div
-      id="aathia-dog-loader"
+      id="athiaa-dog-loader"
       className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-tr from-[#E8572A] via-[#FF6636] to-[#FF8C64] text-white transition-opacity duration-500 ease-in-out ${
         fadeOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
@@ -115,7 +115,7 @@ export default function DogRunningLoader({
         {/* --- Smooth Running INDog Vector --- */}
         <div className="relative w-48 h-32 flex items-center justify-center animate-indog-bob">
           <svg
-            id="aathia-indog-vector-refined"
+            id="athiaa-indog-vector-refined"
             viewBox="0 0 100 60"
             className="w-44 h-30 fill-none stroke-white"
             strokeWidth="3.2"
@@ -201,7 +201,7 @@ export default function DogRunningLoader({
         {/* Interactive Fact Highlight */}
         <div className="bg-black/15 backdrop-blur-md px-6 py-4 rounded-3xl border border-white/10 text-xs md:text-sm text-center leading-relaxed font-sans shadow-lg inline-block transform transition hover:scale-[1.02]">
           <span className="text-secondary font-bold mr-1.5">Quick Tip:</span>
-          <span className="text-cream opacity-95 font-medium">{currentFact || "Aathia supports 100% transparent local rehabilitation networks."}</span>
+          <span className="text-cream opacity-95 font-medium">{currentFact || "Athiaa supports 100% transparent local rehabilitation networks."}</span>
         </div>
       </div>
 
@@ -212,7 +212,7 @@ export default function DogRunningLoader({
 
       {/* Brand Footer Credit */}
       <div className="absolute bottom-6 flex items-center space-x-2 text-[10px] md:text-xs tracking-widest font-mono uppercase text-orange-100/60 font-semibold">
-        <span>AATHIA ANIMAL WELFARE</span>
+        <span>ATHIAA ANIMAL WELFARE</span>
         <span>•</span>
         <span>INDIA REGIONAL REGISTRY</span>
       </div>

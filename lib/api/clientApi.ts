@@ -107,11 +107,11 @@ const INITIAL_EVENTS: Event[] = [
 
 const DEFAULT_SETTINGS: SiteSettings = {
   id: 'default',
-  title: 'Aathia Animal Welfare',
+  title: 'Athiaa Animal Welfare',
   description: 'Compassionate care, rescue, and shelter for street dogs in need.',
-  contact_email: 'contact@aathiango.org',
+  contact_email: 'contact@athiaango.org',
   contact_phone: '+91 98765 43210',
-  address: '123 Rescue Way, Aathia, New Delhi',
+  address: '123 Rescue Way, Athiaa, New Delhi',
   stripe_enabled: true,
   razorpay_enabled: true,
   paypal_enabled: true,
@@ -450,6 +450,16 @@ export async function handleClientApiRequest(url: string, options: RequestInit =
       ],
     };
     return { success: true, data: stats };
+  }
+
+  if (pathname === '/api/upload') {
+    const defaultUrl = bodyData?.url || 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=800';
+    return {
+      success: true,
+      data: {
+        url: defaultUrl
+      }
+    };
   }
 
   if (pathname === '/api/settings') {

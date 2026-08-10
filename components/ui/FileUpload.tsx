@@ -1,5 +1,6 @@
 
 import React, { useRef, useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { UploadCloud, X, FileText, Video, Image as ImageIcon, AlertCircle } from 'lucide-react';
 import { useUpload, UploadResult } from '@/lib/hooks/useUpload';
 

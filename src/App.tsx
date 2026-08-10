@@ -14,24 +14,22 @@ import Events from './pages/Events';
 import Foster from './pages/Foster';
 import Login from './pages/Login';
 import Rescue from './pages/Rescue';
-import Shop from './pages/Shop';
 import Stories from './pages/Stories';
 import Volunteer from './pages/Volunteer';
-import Blog from './pages/Blog';
-
-import AdminDashboard from './pages/admin/AdminDashboard';
-import Adoptions from './pages/admin/Adoptions';
-import AdminBlog from './pages/admin/Blog';
-import Campaigns from './pages/admin/Campaigns';
-import Dogs from './pages/admin/Dogs';
-import Donations from './pages/admin/Donations';
-import AdminEvents from './pages/admin/Events';
-import Messages from './pages/admin/Messages';
-import Settings from './pages/admin/Settings';
-import Users from './pages/admin/Users';
-import Volunteers from './pages/admin/Volunteers';
 
 import AdminRoute from './components/AdminRoute';
+import AdminLayout from './components/admin/AdminLayout';
+import AdminOverview from './pages/admin/AdminOverview';
+import AnimalsAdmin from './pages/admin/AnimalsAdmin';
+import DonationsAdmin from './pages/admin/DonationsAdmin';
+import VolunteersAdmin from './pages/admin/VolunteersAdmin';
+import AdoptionsAdmin from './pages/admin/AdoptionsAdmin';
+import MessagesAdmin from './pages/admin/MessagesAdmin';
+import Campaigns from './pages/admin/Campaigns';
+import AdminBlog from './pages/admin/Blog';
+import AdminEvents from './pages/admin/Events';
+import Settings from './pages/admin/Settings';
+import Users from './pages/admin/Users';
 
 export default function App() {
   return (
@@ -40,6 +38,7 @@ export default function App() {
         <AppProvider>
           <LayoutShell>
             <Routes>
+              {/* Public Routes */}
               <Route path="/" element={<Home />} />
               <Route path="/about" element={<About />} />
               <Route path="/adopt" element={<Adopt />} />
@@ -50,23 +49,31 @@ export default function App() {
               <Route path="/foster" element={<Foster />} />
               <Route path="/login" element={<Login />} />
               <Route path="/rescue" element={<Rescue />} />
-              <Route path="/shop" element={<Shop />} />
               <Route path="/success-stories" element={<Stories />} />
               <Route path="/volunteer" element={<Volunteer />} />
-              <Route path="/blog" element={<Blog />} />
 
-              {/* Admin Routes Protected by AdminRoute Guard */}
-              <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-              <Route path="/admin/adoptions" element={<AdminRoute><Adoptions /></AdminRoute>} />
-              <Route path="/admin/blog" element={<AdminRoute><AdminBlog /></AdminRoute>} />
-              <Route path="/admin/campaigns" element={<AdminRoute><Campaigns /></AdminRoute>} />
-              <Route path="/admin/dogs" element={<AdminRoute><Dogs /></AdminRoute>} />
-              <Route path="/admin/donations" element={<AdminRoute><Donations /></AdminRoute>} />
-              <Route path="/admin/events" element={<AdminRoute><AdminEvents /></AdminRoute>} />
-              <Route path="/admin/messages" element={<AdminRoute><Messages /></AdminRoute>} />
-              <Route path="/admin/settings" element={<AdminRoute><Settings /></AdminRoute>} />
-              <Route path="/admin/users" element={<AdminRoute><Users /></AdminRoute>} />
-              <Route path="/admin/volunteers" element={<AdminRoute><Volunteers /></AdminRoute>} />
+              {/* Admin Console Routes Protected by AdminRoute & AdminLayout */}
+              <Route
+                path="/admin"
+                element={
+                  <AdminRoute>
+                    <AdminLayout />
+                  </AdminRoute>
+                }
+              >
+                <Route index element={<AdminOverview />} />
+                <Route path="animals" element={<AnimalsAdmin />} />
+                <Route path="dogs" element={<AnimalsAdmin />} />
+                <Route path="donations" element={<DonationsAdmin />} />
+                <Route path="volunteers" element={<VolunteersAdmin />} />
+                <Route path="adoptions" element={<AdoptionsAdmin />} />
+                <Route path="messages" element={<MessagesAdmin />} />
+                <Route path="campaigns" element={<Campaigns />} />
+                <Route path="blog" element={<AdminBlog />} />
+                <Route path="events" element={<AdminEvents />} />
+                <Route path="settings" element={<Settings />} />
+                <Route path="users" element={<Users />} />
+              </Route>
             </Routes>
           </LayoutShell>
         </AppProvider>

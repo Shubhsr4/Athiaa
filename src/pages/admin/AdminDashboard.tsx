@@ -46,7 +46,7 @@ export default function AdminPage() {
   };
 
   return (
-    <div id="aathia-admin-root" className="max-w-7xl mx-auto px-4 py-12 space-y-10 font-sans text-left">
+    <div id="athiaa-admin-root" className="max-w-7xl mx-auto px-4 py-12 space-y-10 font-sans text-left">
       
       {/* Header section with Admin menu */}
       <div id="admin-header-card" className="bg-[#1C1C2E] text-white p-8 rounded-3xl relative overflow-hidden shadow-lg border border-white/5">
@@ -54,7 +54,7 @@ export default function AdminPage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-10">
           <div className="space-y-1.5">
             <span className="text-[10px] bg-red-500 text-white font-extrabold px-3 py-1 rounded-full uppercase tracking-wider font-mono">
-              Aathia NGO Secure Console
+              Athiaa NGO Secure Console
             </span>
             <h1 className="text-3xl md:text-4xl font-bold font-baloo leading-tight">NGO Operations Dashboard</h1>
             <p className="text-xs text-gray-400 font-medium">Coordinate foster programs, donations auditing, veterinary files, and adoptions.</p>

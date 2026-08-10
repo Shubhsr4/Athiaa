@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ShoppingBag } from 'lucide-react';
 import { ShopProduct } from '@/src/types';
 import { useAppContext } from '@/components/providers/AppContext';
@@ -26,7 +27,7 @@ const INITIAL_PRODUCTS: ShopProduct[] = [
   },
   {
     id: 'prod-3',
-    name: 'Aathia Ceramic Coffee Mug',
+    name: 'Athiaa Ceramic Coffee Mug',
     price: 249,
     description: 'Warm cream glaze ceramic coffee mug with hand-pressed paw relief details in Deep Saffron color. Microwave safe.',
     image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&q=80&w=500',
@@ -55,6 +56,7 @@ const INITIAL_PRODUCTS: ShopProduct[] = [
 ];
 
 export default function ShopPage() {
+  const { t } = useTranslation();
   const { addToCart: onAddToCart } = useAppContext();
 
   const [shopCategory, setShopCategory] = useState<'All' | 'T-shirts' | 'Tote bags' | 'Mugs' | 'Bandanas'>('All');
@@ -82,10 +84,10 @@ export default function ShopPage() {
   };
 
   return (
-    <div id="aathia-shop-view" className="max-w-7xl mx-auto px-4 py-16 relative space-y-12 text-left font-sans">
+    <div id="athiaa-shop-view" className="max-w-7xl mx-auto px-4 py-16 relative space-y-12 text-left font-sans">
       <div className="text-center space-y-2">
         <span className="text-primary font-bold tracking-widest uppercase text-sm font-mono block">100% Proceeds Support Stray Rescue Vets</span>
-        <h1 className="text-3xl md:text-5xl font-bold font-baloo text-deep">Aathia Charity Merch Shop</h1>
+        <h1 className="text-3xl md:text-5xl font-bold font-baloo text-deep">Athiaa Charity Merch Shop</h1>
         <p className="text-gray-600 max-w-xl mx-auto text-sm leading-relaxed">
           Look stylish while protecting street strays! 100% of the proceeds generated directly finances ambulance fuels, surgical stitches and puppy meal bowls.
         </p>

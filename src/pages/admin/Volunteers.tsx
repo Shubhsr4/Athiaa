@@ -11,7 +11,7 @@ import AdminSkeleton from '@/components/ui/AdminSkeleton';
 import { ChevronDown, ChevronUp, Save, Briefcase, Calendar, CheckSquare, Plus } from 'lucide-react';
 
 export default function VolunteersConsolePage() {
-  const { isAdmin, isLoading: authLoading } = useAuth();
+  const { user, isAdmin, isLoading: authLoading } = useAuth();
   const { toast, showToast } = useToast();
   const { updateVolunteer } = useVolunteerMutations();
 
@@ -44,6 +44,22 @@ export default function VolunteersConsolePage() {
   const handleStatusChange = async (id: string, status: string) => {
     try {
       await updateVolunteer(id, { status: status as any });
+
+      if (user?.id) {
+        try {
+          const { supabase } = await import('../../utils/supabase');
+          await supabase.from('audit_logs').insert({
+            actor_id: user.id,
+            action: `UPDATE_VOLUNTEER_STATUS_${status.toUpperCase()}`,
+            table_name: 'volunteers',
+            record_id: id,
+            details: { status, updated_at: new Date().toISOString() }
+          });
+        } catch (e) {
+          console.warn('Audit log write note:', e);
+        }
+      }
+
       showToast('Volunteer status updated successfully!', 'success');
       mutate();
     } catch (err: any) {
@@ -137,7 +153,7 @@ export default function VolunteersConsolePage() {
                     <React.Fragment key={vol.id}>
                       <tr id={`volunteer-row-${vol.id}`} className={`hover:bg-slate-50/50 ${isExpanded ? 'bg-orange-50/10' : ''}`}>
                         <td className="py-4 px-6">
-                          <p className="font-extrabold text-slate-800 text-sm font-baloo">{(vol as any).full_name || 'Aathia Member'}</p>
+                          <p className="font-extrabold text-slate-800 text-sm font-baloo">{(vol as any).full_name || 'Athiaa Member'}</p>
                           <p className="text-[10px] text-gray-405 font-mono">{(vol as any).email || 'No email registered'}</p>
                         </td>
                         <td className="py-4 px-4 text-center">

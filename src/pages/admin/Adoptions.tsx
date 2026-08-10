@@ -8,7 +8,7 @@ import AdminSkeleton from '@/components/ui/AdminSkeleton';
 import { ChevronDown, ChevronUp, Save, Filter } from 'lucide-react';
 
 export default function AdoptionApplicationsPage() {
-  const { isAdmin, isLoading: authLoading } = useAuth();
+  const { user, isAdmin, isLoading: authLoading } = useAuth();
   const { toast, showToast } = useToast();
   const { updateApplication } = useAdoptionMutations();
 
@@ -51,6 +51,22 @@ export default function AdoptionApplicationsPage() {
         status,
         notes
       });
+
+      if (user?.id) {
+        try {
+          const { supabase } = await import('../../utils/supabase');
+          await supabase.from('audit_logs').insert({
+            actor_id: user.id,
+            action: `UPDATE_ADOPTION_STATUS_${(status || 'UPDATED').toUpperCase()}`,
+            table_name: 'adoption_requests',
+            record_id: id,
+            details: { status, notes, updated_at: new Date().toISOString() }
+          });
+        } catch (e) {
+          console.warn('Audit log write note:', e);
+        }
+      }
+
       showToast('Application updated successfully!', 'success');
       setExpandedId(null);
       mutate();

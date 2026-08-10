@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Share2 } from 'lucide-react';
 import { useSuccessStories } from '@/lib/hooks/useSuccessStories';
 
@@ -27,13 +28,14 @@ const DEFAULT_SUCCESS_STORIES = [
 ];
 
 export default function StoriesPage() {
+  const { t } = useTranslation();
   const [storyFilterCity, setStoryFilterCity] = useState('All');
   const { stories: dbStories, isLoading, error } = useSuccessStories();
 
   const rawStories = dbStories && dbStories.length > 0 ? dbStories : DEFAULT_SUCCESS_STORIES;
   const storiesList = rawStories.map((story: any) => ({
     id: story.id,
-    dogName: story.dogName || story.title || 'Aathia Dog',
+    dogName: story.dogName || story.title || 'Athiaa Dog',
     city: story.city || 'Mumbai',
     quote: story.quote || story.content || '',
     update: story.update || story.content || '',
@@ -57,7 +59,7 @@ export default function StoriesPage() {
   if (error) return null;
 
   return (
-    <div id="aathia-stories-view" className="max-w-7xl mx-auto px-4 py-16 relative space-y-12 text-left font-sans">
+    <div id="athiaa-stories-view" className="max-w-7xl mx-auto px-4 py-16 relative space-y-12 text-left font-sans">
       <div className="text-center space-y-2">
         <span className="text-primary font-bold tracking-widest uppercase text-sm font-mono block">Lives Completely Reformed</span>
         <h1 className="text-3xl md:text-5xl font-bold font-baloo text-deep">Adopted Success Stories</h1>
@@ -104,7 +106,7 @@ export default function StoriesPage() {
             <button 
               onClick={() => {
                 if (typeof window !== 'undefined' && navigator.clipboard) {
-                  navigator.clipboard.writeText(`Read ${story.dogName} Happy adopted story in Aathia welfare: ${window.location.href}`);
+                  navigator.clipboard.writeText(`Read ${story.dogName} Happy adopted story in Athiaa welfare: ${window.location.href}`);
                   alert("Story share link copied!");
                 } else {
                   alert(`Share link customized for ${story.dogName}! Check WhatsApp!`);

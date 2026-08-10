@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Heart, 
   Share2, 
@@ -64,6 +65,7 @@ const LOCAL_INITIAL_DOGS = [
 ];
 
 export default function AdoptPage() {
+  const { t } = useTranslation();
   const { 
     triggerAppletActionLoader, 
     favoriteDogs, 
@@ -80,10 +82,12 @@ export default function AdoptPage() {
 
   const dogsList = (dbDogs && dbDogs.length > 0 ? dbDogs : LOCAL_INITIAL_DOGS).map((d: any) => ({
     ...d,
-    image: d.image || d.main_image_url || 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=600',
+    image: d.cover_image_url || d.image || d.main_image_url || 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=600',
+    main_image_url: d.cover_image_url || d.main_image_url || d.image || 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=600',
     city: d.city || d.location || 'Delhi Shelter',
-    personalityTags: (d.personalityTags && d.personalityTags.length > 0) ? d.personalityTags : (d.flags && d.flags.length > 0 ? d.flags : ['Friendly', 'Vaccinated']),
-    lifeStory: d.lifeStory || d.description || 'Rescued street dog in need of loving care.',
+    species: d.species || 'Dog',
+    personalityTags: (d.personalityTags && d.personalityTags.length > 0) ? d.personalityTags : (d.flags && d.flags.length > 0 ? d.flags : ['Rescued', 'Medical Care', 'Needs Home']),
+    lifeStory: d.story || d.lifeStory || d.description || 'Rescued street animal under sanctuary care, looking for a loving permanent family.',
     medicalBadges: d.medicalBadges || { vaccinated: true, neutered: true, dewormed: true, microchipped: true },
   }));
 
@@ -941,19 +945,19 @@ export default function AdoptPage() {
         /* RENDER CASE B: LIST OF DOGS */
         <div className="space-y-8">
           <div className="space-y-2 text-center">
-            <span className="text-primary font-bold tracking-widest uppercase text-sm font-mono font-bold">Heal, Rehome & Adopt</span>
-            <h1 className="text-3xl md:text-5xl font-bold font-baloo text-deep">Rescue Animals Seeking Loving Homes</h1>
+            <span className="text-primary font-bold tracking-widest uppercase text-sm font-mono font-bold">{t('nav.adopt')}</span>
+            <h1 className="text-3xl md:text-5xl font-bold font-baloo text-deep">{t('adopt.title')}</h1>
             <p className="text-gray-600 max-w-xl mx-auto text-sm font-sans leading-relaxed">
-              All of these street native and rescued animal sweethearts (dogs, cats, cows, hamsters, rabbits, and more) have been fully vetted, complete in behavioral therapy, and ready to meet prospective adopters.
+              {t('adopt.subtitle')}
             </p>
           </div>
 
           {/* Quick Species Quick Selector Tab bar */}
           <div className="flex flex-wrap gap-2 justify-center pb-2">
             {[
-              { id: 'All', label: 'All Animals' },
-              { id: 'Dog', label: 'Dogs' },
-              { id: 'Cat', label: 'Cats' },
+              { id: 'All', label: t('adopt.filterAll') },
+              { id: 'Dog', label: t('adopt.filterDogs') },
+              { id: 'Cat', label: t('adopt.filterCats') },
               { id: 'Cow', label: 'Cows' },
               { id: 'Hamster', label: 'Hamsters' },
               { id: 'Rabbit', label: 'Rabbits' },
@@ -990,7 +994,7 @@ export default function AdoptPage() {
                 <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input 
                   type="text" 
-                  placeholder="Search by animal name, species, breed, personality, city..." 
+                  placeholder={t('adopt.searchPlaceholder')} 
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   className="w-full bg-cream border border-orange-50 rounded-xl py-3 pl-11 pr-4 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20"
@@ -1005,7 +1009,7 @@ export default function AdoptPage() {
                     filterSpecialNeeds ? 'bg-orange-50 text-primary border-primary' : 'bg-white text-gray-500 border-gray-220 hover:bg-cream'
                   }`}
                 >
-                  <span>Special Needs</span>
+                  <span>{t('adopt.medicalNeeds')}</span>
                 </button>
 
                 <button 

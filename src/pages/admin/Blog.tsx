@@ -134,7 +134,7 @@ export default function BlogManagementPage() {
                     <td className="py-3 px-4 font-bold text-slate-800 text-sm max-w-[280px]">
                       <p className="truncate font-baloo">{post.title}</p>
                       <p className="text-[10px] text-gray-400 font-semibold font-mono">
-                        by {(post as any).author_name || 'Aathia Staff'}
+                        by {(post as any).author_name || 'Athiaa Staff'}
                       </p>
                     </td>
                     <td className="py-3 px-4 text-center">

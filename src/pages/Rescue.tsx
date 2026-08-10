@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { apiFetch } from '@/lib/api/clientApi';
 import { 
   AlertCircle, 
@@ -23,8 +24,10 @@ import { RescueReport as TypeRescueReport } from '@/src/types';
 import { useAppContext } from '@/components/providers/AppContext';
 import DelhiMap, { RescueReport } from '@/src/components/DelhiMap';
 import { useRescueReports } from '@/lib/hooks/useRescueReports';
+import ImageUploader from '@/src/components/ImageUploader';
 
 export default function RescuePage() {
+  const { t } = useTranslation();
   const { 
     triggerAppletActionLoader, 
   } = useAppContext();
@@ -40,7 +43,7 @@ export default function RescuePage() {
         body: JSON.stringify({
           category: 'rescue',
           name: report.reporterName || 'Anonymous Caretaker',
-          email: `${report.reporterWhatsApp}@aathia.org`,
+          email: `${report.reporterWhatsApp}@athiaa.org`,
           phone: report.reporterWhatsApp,
           subject: `EMERGENCY Rescue: ${report.animalType} - ${report.condition}`,
           message: `Location: ${report.location} (Landmark: ${report.landmark}, Pin: ${report.pincode}). Emergency dispatch requested.`
@@ -97,7 +100,7 @@ export default function RescuePage() {
     }
 
     triggerAppletActionLoader("Assigning rescue coordinates...", "Locking mobile cellular telemetry...", () => {
-      triggerAppletActionLoader("Dispatching Aathia Field scooter...", "Notifying local area coordinator groups...", () => {
+      triggerAppletActionLoader("Dispatching Athiaa Field scooter...", "Notifying local area coordinator groups...", () => {
         const reportPayload: TypeRescueReport = {
           id: `rep-${Date.now()}`,
           animalType: animalType,
@@ -146,17 +149,17 @@ export default function RescuePage() {
   };
 
   return (
-    <div id="aathia-rescue-module" className="max-w-7xl mx-auto px-4 py-16 space-y-12 text-left font-sans">
+    <div id="athiaa-rescue-module" className="max-w-7xl mx-auto px-4 py-16 space-y-12 text-left font-sans">
       {/* 1. Header Area with big telephone CTA */}
       <div className="bg-gradient-to-r from-red-500 to-[#E8572A] rounded-3xl p-8 md:p-12 text-white text-left shadow-xl flex flex-col md:flex-row justify-between items-center gap-8 relative overflow-hidden">
         <div className="space-y-4 md:max-w-xl">
           <span className="bg-white/25 text-white border border-white/20 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-widest font-mono flex items-center w-max gap-1.5">
             <ShieldAlert size={12} className="text-white" />
-            <span>CRITICAL EMERGENCY SYSTEM</span>
+            <span>{t('rescue.emergencyNotice')}</span>
           </span>
-          <h1 className="text-3xl md:text-5xl font-bold font-baloo leading-tight">Aathia 24/7 Trauma Helpline</h1>
+          <h1 className="text-3xl md:text-5xl font-bold font-baloo leading-tight">{t('rescue.title')}</h1>
           <p className="text-sm text-red-50 leading-relaxed font-sans">
-            Spotted an accident-struck, severely dehydrated, or trapped stray animal? Contact us instantly. If you are reporting from Mumbai, Thane, Pune or Bengaluru, call our hotline now or submit a digital dispatch record.
+            {t('rescue.subtitle')}
           </p>
         </div>
 
@@ -164,7 +167,7 @@ export default function RescuePage() {
           <p className="text-xs font-mono font-bold tracking-widest text-red-100 uppercase font-sans whitespace-nowrap">CLICK TO CALL FROM MOBILE</p>
           <a 
             href="tel:+918882470000" 
-            className="inline-flex items-center justify-center space-x-3 bg-white text-[#E8572A] font-extrabold hover:bg-[#FFF9F4] text-xl md:text-3xl px-8 py-4 rounded-2xl shadow-lg transition-transform hover:-translate-y-1 whitespace-nowrap"
+            className="inline-flex items-center justify-center space-x-3 bg-white text-[#E8572A] font-extrabold hover:bg-[#FFF9F4] text-xl md:text-3xl px-8 py-4 rounded-2xl shadow-lg transition-transform hover:-translate-y-1 whitespace-nowrap cursor-pointer"
           >
             <Phone size={24} className="animate-bounce shrink-0" />
             <span className="whitespace-nowrap">+91 8882 470000</span>
@@ -181,7 +184,7 @@ export default function RescuePage() {
           <div className="border-b border-orange-50 pb-3">
             <h3 className="font-baloo text-2xl font-bold text-deep flex items-center gap-2">
               <ShieldAlert className="w-6 h-6 text-primary" />
-              <span>Log Digital Rescue Ticket</span>
+              <span>{t('rescue.reportFormTitle')}</span>
             </h3>
             <p className="text-xs text-gray-500 font-sans mt-0.5">Filing takes under 60 seconds. Our coordinator dispatches to active local feeds.</p>
           </div>
@@ -224,7 +227,7 @@ export default function RescuePage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-gray-500 uppercase block">Precise Location Address Description *</label>
+              <label className="text-[10px] font-bold text-gray-500 uppercase block">{t('rescue.rescueLocation')} *</label>
               <input 
                 type="text" 
                 required
@@ -262,36 +265,17 @@ export default function RescuePage() {
               </div>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-gray-500 uppercase block">Upload Photo of Stray (Compressed validation)</label>
-              <div className="border-2 border-dashed border-gray-220 rounded-xl p-4 text-center cursor-pointer hover:bg-cream/45 transition">
-                <input 
-                  type="file" 
-                  id="trauma-photo"
-                  accept="image/*"
-                  onChange={handleMockImageUpload}
-                  className="hidden" 
-                />
-                <label htmlFor="trauma-photo" className="cursor-pointer space-y-1">
-                  {imageFileUrl ? (
-                    <div className="flex gap-2 items-center justify-center">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                      <span className="text-emerald-600 font-bold">Photo attached</span>
-                      <span className="text-[9px] text-gray-400">(Auto compressed under 200KB)</span>
-                    </div>
-                  ) : (
-                    <>
-                      <Camera className="w-6 h-6 text-gray-400 mx-auto mb-1" />
-                      <p className="font-semibold text-gray-600 font-sans text-xs">Tap to choose camera or attachment</p>
-                    </>
-                  )}
-                </label>
-              </div>
-            </div>
+            <ImageUploader
+              bucket="media-gallery"
+              folder="rescue-reports"
+              label={t('rescue.uploadPhoto')}
+              value={imageFileUrl || ''}
+              onChange={(url) => setImageFileUrl(url)}
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-500 uppercase block">Your Name (Caretaker reporter)</label>
+                <label className="text-[10px] font-bold text-gray-500 uppercase block">{t('rescue.reporterName')}</label>
                 <input 
                   type="text" 
                   value={reporterName}
@@ -302,7 +286,7 @@ export default function RescuePage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-gray-500 uppercase block">WhatsApp Number *</label>
+                <label className="text-[10px] font-bold text-gray-500 uppercase block">{t('rescue.reporterPhone')} *</label>
                 <div className="relative font-sans">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 font-mono text-sm">+91</span>
                   <input 
@@ -341,7 +325,7 @@ export default function RescuePage() {
               className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3.5 rounded-xl uppercase tracking-wider shadow-warm font-baloo text-base cursor-pointer flex items-center justify-center gap-2"
             >
               <Send size={18} />
-              <span>Submit Rescue Ticket</span>
+              <span>{t('rescue.submitReport')}</span>
             </button>
           </form>
         </div>
@@ -422,7 +406,7 @@ export default function RescuePage() {
             { step: "03", name: "Scoot-Rescue", p: "Vehicle team reaches scene in 15-20 mins" },
             { step: "04", name: "First-Aid", p: "Timely bleeding arrest & splint brace fits info" },
             { step: "05", name: "Vet ICU", p: "Professional surgeries & vaccination" },
-            { step: "06", name: "Sanctuary", p: "Rehab inside Aathia shelter residential sections" }
+            { step: "06", name: "Sanctuary", p: "Rehab inside Athiaa shelter residential sections" }
           ].map((inf, i) => (
             <div key={i} className="bg-[#FFFBF7] border border-orange-100 p-4 rounded-2xl text-left space-y-2 relative overflow-hidden flex flex-col justify-between">
               <span className="text-xl font-bold font-mono text-primary/30">{inf.step}</span>

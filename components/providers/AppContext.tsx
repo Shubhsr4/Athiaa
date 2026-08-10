@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dog, ShopProduct, AdoptionApplication } from '@/src/types';
 import { SWRConfig } from 'swr';
 
@@ -34,7 +35,11 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<'EN' | 'HI'>('EN');
+  const { i18n } = useTranslation();
+  const language = i18n.language?.toLowerCase().startsWith('hi') ? 'HI' : 'EN';
+  const setLanguage = (lang: 'EN' | 'HI') => {
+    i18n.changeLanguage(lang.toLowerCase());
+  };
   const [cartItems, setCartItems] = useState<{ product: ShopProduct; quantity: number; selectedSize?: string }[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [selectedDogForProfile, setSelectedDogForProfile] = useState<Dog | null>(null);
@@ -47,7 +52,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [loaderState, setLoaderState] = useState({
     isVisible: true,
     title: 'Nurturing Street Angels',
-    subtext: 'Booting Aathia National Resource Registry...'
+    subtext: 'Booting Athiaa National Resource Registry...'
   });
 
   // Auto Dismiss Initial Intro Loader after 1.8 seconds

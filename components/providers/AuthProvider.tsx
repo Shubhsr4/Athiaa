@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('aathia_user') || localStorage.getItem('athia_user');
+      const stored = localStorage.getItem('athiaa_user') || localStorage.getItem('athia_user');
       if (stored) {
         try {
           setCustomUser(JSON.parse(stored));
@@ -42,14 +42,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loginUser = (userProfile: any) => {
     setCustomUser(userProfile);
     if (typeof window !== 'undefined') {
-      localStorage.setItem('aathia_user', JSON.stringify(userProfile));
+      localStorage.setItem('athiaa_user', JSON.stringify(userProfile));
     }
   };
 
   const logoutUser = () => {
     setCustomUser(null);
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('aathia_user');
+      localStorage.removeItem('athiaa_user');
       localStorage.removeItem('athia_user');
     }
     signOut();
@@ -139,17 +139,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = async () => {
-    if (!supabase) return;
     setIsLoading(true);
     try {
-      await apiFetch('/api/auth/logout', { method: 'POST' });
-      await supabase.auth.signOut();
+      if (supabase) {
+        await supabase.auth.signOut();
+      }
+      logoutUser();
       setUser(null);
       setSession(null);
       setProfile(null);
       setDbIsAdmin(false);
     } catch (e) {
       console.error("Logout failed:", e);
+      logoutUser();
     } finally {
       setIsLoading(false);
     }

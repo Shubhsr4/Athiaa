@@ -1,9 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   AlertCircle,
   Smartphone,
-  Loader2
+  Loader2,
+  ShieldCheck
 } from 'lucide-react';
 import { UserProfile } from '@/src/types';
 import { useAppContext } from '@/components/providers/AppContext';
@@ -12,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import { createClient } from '@/lib/supabase/client';
 
 export default function LoginPage() {
+  const { t } = useTranslation();
   const { triggerAppletActionLoader } = useAppContext();
   const { user, loginUser } = useAuth();
 
@@ -28,6 +31,21 @@ export default function LoginPage() {
   const [countdown, setCountdown] = useState(30);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const handleDemoAdminLogin = () => {
+    triggerAppletActionLoader("Logging in as Demo Admin...", "Syncing NGO Administrator privileges...", () => {
+      const demoAdminProfile: UserProfile = {
+        uid: `admin-demo-${Date.now()}`,
+        name: 'Demo Administrator',
+        phone: '+91 9999999999',
+        city: 'Delhi NCR',
+        registeredAt: new Date().toLocaleDateString('en-IN'),
+        role: 'Admin'
+      };
+      loginUser(demoAdminProfile);
+      navigate('/admin');
+    });
+  };
+
   // OTP Countdown timer
   useEffect(() => {
     let timer: any;
@@ -37,10 +55,10 @@ export default function LoginPage() {
     return () => clearInterval(timer);
   }, [smsSent, countdown]);
 
-  // Redirect to dashboard if already logged in
+  // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      navigate('/dashboard');
+      navigate(user.role?.toLowerCase() === 'admin' ? '/admin' : '/dashboard');
     }
   }, [user, navigate]);
 
@@ -211,11 +229,35 @@ export default function LoginPage() {
         
         <div className="bg-[#1C1C2E] p-6 text-white text-center relative space-y-2 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-[#E8572A]/20 to-transparent pointer-events-none" />
-          <p className="text-2xl font-bold font-baloo">Aathia Login</p>
+          <p className="text-2xl font-bold font-baloo">Athiaa Login</p>
           <p className="text-[11px] text-gray-300 font-medium leading-relaxed">Log in to track adoption cases, foster updates, and receive 80G tax benefit invoices.</p>
         </div>
 
         <div className="p-6 space-y-4">
+          {/* Quick Demo Admin Account Card */}
+          <div className="bg-gradient-to-r from-[#E8572A] to-amber-500 p-4 rounded-2xl text-white shadow-warm space-y-2.5">
+            <div className="flex justify-between items-center">
+              <span className="text-[9px] font-extrabold uppercase tracking-wider font-mono bg-white/20 px-2 py-0.5 rounded-md">
+                ⚡ DEMO ADMIN ACCESS
+              </span>
+              <span className="text-[10px] font-mono font-bold text-amber-100">Role: Administrator</span>
+            </div>
+            <div>
+              <h4 className="font-baloo text-base font-bold leading-tight">Instant Demo Admin Account</h4>
+              <p className="text-[11px] text-orange-100 mt-0.5 leading-snug">
+                Click below to overview the NGO command console, rescue triage, adoptions, and volunteer rosters instantly.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleDemoAdminLogin}
+              className="w-full bg-white hover:bg-orange-50 text-[#E8572A] font-extrabold py-2.5 rounded-xl text-xs shadow transition cursor-pointer flex items-center justify-center space-x-1.5"
+            >
+              <ShieldCheck size={16} className="text-[#E8572A]" />
+              <span>Sign In as Demo Admin</span>
+            </button>
+          </div>
+
           {authError && (
             <div className="bg-red-50 text-red-700 p-3 rounded-xl border border-red-100 flex items-start gap-1.5 text-xs font-semibold leading-normal">
               <AlertCircle size={14} className="shrink-0 mt-0.5" />

@@ -1,11 +1,13 @@
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MapPin, MessageSquare, Check, ChevronRight } from 'lucide-react';
 import { apiFetch } from '@/lib/api/clientApi';
 import { useAppContext } from '@/components/providers/AppContext';
 import { useSettings } from '@/lib/hooks/useSettings';
 
 export default function ContactPage() {
+  const { t } = useTranslation();
   const { triggerAppletActionLoader } = useAppContext();
   const { settings, isLoading, error } = useSettings();
 
@@ -33,7 +35,7 @@ export default function ContactPage() {
           body: JSON.stringify({
             category: 'general',
             name: contactForm.name,
-            email: `${contactForm.phone}@aathia.org`,
+            email: `${contactForm.phone}@athiaa.org`,
             phone: contactForm.phone,
             subject: `Contact Dept Inquiry: ${contactForm.dept} (${contactForm.city})`,
             message: contactForm.message
@@ -62,10 +64,10 @@ export default function ContactPage() {
   if (error) return null;
 
   return (
-    <div id="aathia-contact-view" className="max-w-7xl mx-auto px-4 py-16 relative space-y-12 text-left font-sans">
+    <div id="athiaa-contact-view" className="max-w-7xl mx-auto px-4 py-16 relative space-y-12 text-left font-sans">
       <div className="text-center space-y-2">
         <span className="text-primary font-bold tracking-widest uppercase text-sm font-mono block">We'd love to hear from you</span>
-        <h1 className="text-3xl md:text-5xl font-bold font-baloo text-deep">Get in touch with Aathia</h1>
+        <h1 className="text-3xl md:text-5xl font-bold font-baloo text-deep">Get in touch with Athiaa</h1>
         <p className="text-gray-600 max-w-xl mx-auto text-sm leading-relaxed">
           Have queries on adoptions, corporate CSR collaborations, press media releases, or volunteering hubs? Text us directly.
         </p>
@@ -75,7 +77,7 @@ export default function ContactPage() {
         
         {/* Direct addresses contacts */}
         <div className="lg:col-span-5 space-y-6">
-          <h3 className="text-xl font-bold font-baloo text-deep">Aathia Shelter Offices</h3>
+          <h3 className="text-xl font-bold font-baloo text-deep">Athiaa Shelter Offices</h3>
           
           <div className="space-y-4 font-sans text-xs text-gray-500">
             <div className="p-4 bg-white rounded-3xl border border-orange-50 shadow-sm space-y-1 text-left">
@@ -83,7 +85,7 @@ export default function ContactPage() {
                 <MapPin size={14} className="text-primary shrink-0" />
                 <span>MUMBAI CORE RESCUE CENTER</span>
               </div>
-              <p>{contactInfo?.mumbai_address || contactInfo?.address || "Aathia Shelter Hub, Behind Thane Civil Hospital, Thane West, Mumbai, MH - 400601"}</p>
+              <p>{contactInfo?.mumbai_address || contactInfo?.address || "Athiaa Shelter Hub, Behind Thane Civil Hospital, Thane West, Mumbai, MH - 400601"}</p>
               <p className="font-mono text-[10px] text-primary font-bold pt-1">HOURS: 24/7 Helpline Active | Tel: {contactInfo?.phone || "+91 91888 24700"}</p>
             </div>
 
@@ -93,7 +95,7 @@ export default function ContactPage() {
                 <span>BENGALURU SANCTUARY DIVISION</span>
               </div>
               <p>{contactInfo?.bengaluru_address || "Adoption House, cubbon road side extension, Indiranagar, Bengaluru, KA - 560008"}</p>
-              <p className="font-mono text-[10px] text-gray-400 pt-1">EMAIL: {contactInfo?.email || "help@aathia.org"} | HOURS: 09:30 AM - 06:00 PM IST</p>
+              <p className="font-mono text-[10px] text-gray-400 pt-1">EMAIL: {contactInfo?.email || "help@athiaa.org"} | HOURS: 09:30 AM - 06:00 PM IST</p>
             </div>
           </div>
 

@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Search, Tag, ArrowLeft, ChevronRight, BookOpen } from 'lucide-react';
 import { useBlogPosts } from '@/lib/hooks/useBlog';
 
@@ -31,6 +32,7 @@ const LOCAL_INITIAL_BLOG_POSTS = [
 ];
 
 export default function BlogPage() {
+  const { t } = useTranslation();
   const [blogSearch, setBlogSearch] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [selectedBlogArticle, setSelectedBlogArticle] = useState<any | null>(null);

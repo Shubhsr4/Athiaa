@@ -224,7 +224,7 @@ export default function DonationsConsolePage() {
                       </span>
                     </td>
                     <td className="py-3 px-4 max-w-[200px] truncate text-slate-500 font-semibold">
-                      {don.campaign?.title || don.campaign_id || 'General Fund (Aathia)'}
+                      {don.campaign?.title || don.campaign_id || 'General Fund (Athiaa)'}
                     </td>
                     <td className="py-3 px-6 text-right font-mono text-[10px] text-gray-400">
                       {new Date(don.created_at).toLocaleString('en-IN', {
