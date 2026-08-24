@@ -230,16 +230,24 @@ export default function AdoptPage() {
     setTimeout(() => setShowShareToast(false), 4000);
   };
 
-  const getRadarPointsString = (radar: Dog['personalityRadar']) => {
+  const getRadarPointsString = (radar?: Dog['personalityRadar']) => {
+    const safeRadar = radar || {
+      playful: 80,
+      friendly: 90,
+      calm: 75,
+      energetic: 85,
+      independent: 60,
+      affectionate: 95
+    };
     const centers = { x: 50, y: 50 };
     const radius = 40;
     const attributes = [
-      radar.playful,
-      radar.friendly,
-      radar.calm,
-      radar.energetic,
-      radar.independent,
-      radar.affectionate
+      safeRadar.playful ?? 80,
+      safeRadar.friendly ?? 90,
+      safeRadar.calm ?? 75,
+      safeRadar.energetic ?? 85,
+      safeRadar.independent ?? 60,
+      safeRadar.affectionate ?? 95
     ];
 
     const points = attributes.map((val, idx) => {

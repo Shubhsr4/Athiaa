@@ -171,43 +171,20 @@ export default function AnimalsAdmin() {
           })
           .eq('id', editingAnimal.id);
 
-        if (updateErr) {
-          console.warn('Database update error, applying local state update:', updateErr.message);
-          setAnimals(prev => prev.map(a => a.id === editingAnimal.id ? {
-            ...a,
-            name: formName.trim(),
-            species: formSpecies.trim(),
-            status: formStatus,
-            location: formLocation.trim() || null,
-            story: formStory.trim() || null,
-            cover_image_url: finalImageUrl || a.cover_image_url
-          } : a));
-        } else {
-          // Audit Log
-          try {
-            await supabase.from('audit_logs').insert({
-              actor_id: user?.id || null,
-              action: 'EDIT_ANIMAL',
-              table_name: 'animals',
-              record_id: editingAnimal.id,
-              details: { name: formName, status: formStatus }
-            });
-          } catch {}
-        }
+        if (updateErr) throw updateErr;
+
+        // Audit Log
+        try {
+          await supabase.from('audit_logs').insert({
+            actor_id: user?.id || null,
+            action: 'EDIT_ANIMAL',
+            table_name: 'animals',
+            record_id: editingAnimal.id,
+            details: { name: formName, status: formStatus }
+          });
+        } catch {}
       } else {
         // CREATE
-        const newAnimalRecord = {
-          id: `animal-${Date.now()}`,
-          name: formName.trim(),
-          species: formSpecies.trim(),
-          status: formStatus,
-          location: formLocation.trim() || 'Delhi Shelter',
-          story: formStory.trim() || null,
-          cover_image_url: finalImageUrl || 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=600',
-          created_by: user?.id || null,
-          created_at: new Date().toISOString()
-        };
-
         const { data: newRow, error: insertErr } = await supabase
           .from('animals')
           .insert({
@@ -222,20 +199,17 @@ export default function AnimalsAdmin() {
           .select()
           .single();
 
-        if (insertErr) {
-          console.warn('Database insert notice, applying local state update:', insertErr.message);
-          setAnimals(prev => [newAnimalRecord, ...prev]);
-        } else {
-          try {
-            await supabase.from('audit_logs').insert({
-              actor_id: user?.id || null,
-              action: 'CREATE_ANIMAL',
-              table_name: 'animals',
-              record_id: newRow.id,
-              details: { name: formName, status: formStatus }
-            });
-          } catch {}
-        }
+        if (insertErr) throw insertErr;
+
+        try {
+          await supabase.from('audit_logs').insert({
+            actor_id: user?.id || null,
+            action: 'CREATE_ANIMAL',
+            table_name: 'animals',
+            record_id: newRow.id,
+            details: { name: formName, status: formStatus }
+          });
+        } catch {}
       }
 
       setUploadProgress(100);

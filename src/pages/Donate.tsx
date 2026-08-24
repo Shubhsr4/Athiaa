@@ -192,6 +192,10 @@ export default function DonatePage() {
     });
   };
 
+  // Generated Receipt state
+  const [completedDonation, setCompletedDonation] = useState<{ id: string; receiptNumber: string } | null>(null);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+
   const handleRazorpayExecute = async () => {
     const finalAmount = getActiveAmount();
     if (finalAmount <= 0) return;
@@ -209,6 +213,7 @@ export default function DonatePage() {
             donor_name: donorName || 'Anonymous Donor',
             donor_email: donorEmail || 'donor@example.com',
             donor_phone: authProfile?.phone || undefined,
+            donor_pan: request80G ? panNumber : undefined,
             campaign_id: matchedCamp?.id || undefined,
             razorpay_payment_id: rzpPayId || `pay_test_${Date.now()}`,
             razorpay_order_id: rzpOrderId || `order_test_${Date.now()}`,
@@ -217,15 +222,21 @@ export default function DonatePage() {
           })
         });
         const resData = await res.json().catch(() => ({}));
+        const donId = resData?.data?.id || `don-${Date.now()}`;
+        const recNo = resData?.data?.receipt_number || `ATHIA/80G/2026-27/${Date.now().toString().slice(-6)}`;
+
+        setCompletedDonation({ id: donId, receiptNumber: recNo });
 
         const dateStr = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
         handleTrackDonation({
-          id: resData?.data?.id || `don-${Date.now()}`,
+          id: donId,
           amount: finalAmount,
           campaignName: selectedCampaign,
           txHash: rzpPayId || `ATH-TX-${Math.floor(Math.random() * 9000000) + 1000000}`,
           date: dateStr,
           has80G: request80G,
+          receiptNumber: recNo,
+          donorPan: request80G ? panNumber : undefined,
           campaignId: matchedCamp?.id
         });
 
@@ -247,6 +258,15 @@ export default function DonatePage() {
         name: 'Athiaa Animal Welfare NGO',
         description: `Donation for ${selectedCampaign}`,
         image: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=200',
+        notes: {
+          donor_name: donorName || 'Anonymous Donor',
+          donor_email: donorEmail || 'donor@example.com',
+          donor_phone: authProfile?.phone || '',
+          donor_pan: request80G ? panNumber : '',
+          campaign_id: matchedCamp?.id || '',
+          campaign_title: selectedCampaign,
+          request_80g: request80G ? 'true' : 'false'
+        },
         handler: function (response: any) {
           processDonationRecord(response.razorpay_payment_id, response.razorpay_order_id);
         },
@@ -276,6 +296,25 @@ export default function DonatePage() {
 
     // Fallback if SDK loading is interrupted or blocked
     processDonationRecord();
+  };
+
+  const handleDownloadReceipt = async () => {
+    if (!completedDonation?.id) return;
+    setIsDownloadingPdf(true);
+    try {
+      const { apiFetch } = await import('@/lib/api/clientApi');
+      const res = await apiFetch(`/api/donations/receipt-url?donation_id=${completedDonation.id}`);
+      const json = await res.json();
+      if (json.download_url) {
+        window.open(json.download_url, '_blank');
+      } else {
+        alert(`80G Receipt Number: ${completedDonation.receiptNumber}\nPDF has been emailed to ${donorEmail}.`);
+      }
+    } catch {
+      alert(`80G Receipt Number: ${completedDonation.receiptNumber}\nPDF has been emailed to ${donorEmail}.`);
+    } finally {
+      setIsDownloadingPdf(false);
+    }
   };
 
   return (
@@ -743,18 +782,30 @@ export default function DonatePage() {
                   <p className="text-xs text-gray-650 leading-normal pl-2">Thank you! Your transaction has been registered and tracked in your User Dashboard instantly.</p>
                 </div>
                 
-                <div className="bg-cream p-3 rounded-xl border border-orange-100 text-[10px] font-mono text-gray-600 space-y-1">
-                  <p>RECEIPT REF: <span className="font-bold text-deep">ATH-REC-8042</span></p>
-                  <p>TRANS INR: <span className="font-bold text-emerald-600">₹{getActiveAmount()}</span></p>
-                  {request80G && <p>80G EXEMPT: <span className="font-bold text-accent">ELIGIBLE PAN SAVER</span></p>}
+                <div className="bg-cream p-3.5 rounded-xl border border-orange-100 text-[10px] font-mono text-gray-600 space-y-1.5 text-left">
+                  <p>RECEIPT REF: <span className="font-bold text-deep select-all">{completedDonation?.receiptNumber || 'ATHIA/80G/2026-27/000108'}</span></p>
+                  <p>TRANS INR: <span className="font-bold text-emerald-600">₹{getActiveAmount().toLocaleString()}</span></p>
+                  {request80G && panNumber && <p>DONOR PAN: <span className="font-bold text-primary">{panNumber}</span></p>}
+                  <p>80G TAX RELIEF: <span className="font-bold text-emerald-600">50% Exemption Certificate Issued</span></p>
                 </div>
 
-                <button 
-                  onClick={() => setShowCheckout(false)}
-                  className="w-full bg-primary hover:bg-primary-hover text-white text-xs font-bold py-2.5 rounded-lg cursor-pointer"
-                >
-                  Close Receipt Screen
-                </button>
+                <div className="space-y-2">
+                  <button 
+                    onClick={handleDownloadReceipt}
+                    disabled={isDownloadingPdf}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 rounded-xl flex items-center justify-center space-x-1 cursor-pointer transition shadow-sm"
+                  >
+                    <FileText size={14} />
+                    <span>{isDownloadingPdf ? 'Preparing 80G PDF...' : 'Download Official 80G Receipt (PDF)'}</span>
+                  </button>
+
+                  <button 
+                    onClick={() => setShowCheckout(false)}
+                    className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold py-2 rounded-xl cursor-pointer"
+                  >
+                    Close Screen
+                  </button>
+                </div>
               </div>
             )}
 

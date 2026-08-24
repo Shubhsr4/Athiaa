@@ -265,12 +265,16 @@ export type Database = {
           donor_email: string | null
           donor_id: string | null
           donor_name: string | null
+          donor_pan: string | null
           donor_phone: string | null
           id: string
           is_recurring: boolean
           razorpay_order_id: string | null
           razorpay_payment_id: string | null
+          receipt_number: string | null
           receipt_sent: boolean
+          receipt_sent_at: string | null
+          receipt_url: string | null
           status: 'created' | 'paid' | 'failed' | 'refunded'
         }
         Insert: {
@@ -281,12 +285,16 @@ export type Database = {
           donor_email?: string | null
           donor_id?: string | null
           donor_name?: string | null
+          donor_pan?: string | null
           donor_phone?: string | null
           id?: string
           is_recurring?: boolean
           razorpay_order_id?: string | null
           razorpay_payment_id?: string | null
+          receipt_number?: string | null
           receipt_sent?: boolean
+          receipt_sent_at?: string | null
+          receipt_url?: string | null
           status?: 'created' | 'paid' | 'failed' | 'refunded'
         }
         Update: {
@@ -297,12 +305,16 @@ export type Database = {
           donor_email?: string | null
           donor_id?: string | null
           donor_name?: string | null
+          donor_pan?: string | null
           donor_phone?: string | null
           id?: string
           is_recurring?: boolean
           razorpay_order_id?: string | null
           razorpay_payment_id?: string | null
+          receipt_number?: string | null
           receipt_sent?: boolean
+          receipt_sent_at?: string | null
+          receipt_url?: string | null
           status?: 'created' | 'paid' | 'failed' | 'refunded'
         }
         Relationships: [

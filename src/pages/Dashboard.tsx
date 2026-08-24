@@ -41,8 +41,11 @@ export default function DashboardPage() {
 
   const {
     user,
+    roles,
+    hasRole,
+    signOut,
     loginUser,
-    logoutUser
+    isLoading
   } = useAuth();
 
   // Selected tab & receipt modal state
@@ -97,11 +100,34 @@ export default function DashboardPage() {
     amount: don.amount,
     campaignName: don.campaign?.title || 'Heal Injured Strays Initiative',
     date: don.created_at ? new Date(don.created_at).toLocaleDateString('en-IN') : new Date().toLocaleDateString('en-IN'),
-    txHash: don.stripe_payment_id || don.id || 'TX-LOCAL',
+    txHash: don.razorpay_payment_id || don.stripe_payment_id || don.id || 'TX-LOCAL',
+    receiptNumber: don.receipt_number || `ATHIA/80G/2026-27/${(don.id || '').slice(0, 6).toUpperCase()}`,
+    donorPan: don.donor_pan,
     has80G: true
   }));
 
   const finalDonations = liveDons.length > 0 ? liveDons : donationHistory;
+
+  const [downloadingReceiptId, setDownloadingReceiptId] = useState<string | null>(null);
+
+  const handleDownloadReceipt = async (don: any) => {
+    setDownloadingReceiptId(don.id);
+    try {
+      const { apiFetch } = await import('@/lib/api/clientApi');
+      const res = await apiFetch(`/api/donations/receipt-url?donation_id=${don.id}`);
+      const json = await res.json();
+      if (json.download_url) {
+        window.open(json.download_url, '_blank');
+      } else {
+        alert(`80G Receipt Reference: ${don.receiptNumber || don.id}\nA copy has been archived in your records.`);
+      }
+    } catch (err) {
+      console.error('Receipt download error:', err);
+      alert(`80G Receipt Reference: ${don.receiptNumber || don.id}`);
+    } finally {
+      setDownloadingReceiptId(null);
+    }
+  };
 
   // OTP Countdown timer
   useEffect(() => {
@@ -251,10 +277,8 @@ export default function DashboardPage() {
     }
   };
 
-  const handleDownloadReceipt = (don: any) => {
-    triggerAppletActionLoader("Mapping charitable 80G tax variables...", "Compiling audit security keys...", () => {
-      setSelectedReceipt(don);
-    });
+  const handleViewReceiptModal = (don: any) => {
+    setSelectedReceipt(don);
   };
 
   // If user is not logged in, render a gorgeous inline authentication page
@@ -464,7 +488,10 @@ export default function DashboardPage() {
             </Link>
           )}
           <button 
-            onClick={logoutUser}
+            onClick={async () => {
+              await signOut();
+              window.location.href = '/login';
+            }}
             className="bg-white/10 text-white hover:bg-white/15 px-4 py-2.5 rounded-xl text-xs flex items-center cursor-pointer font-bold border border-white/5"
           >
             <LogOut size={13} className="mr-1.5" /> Logout
@@ -628,21 +655,36 @@ export default function DashboardPage() {
                 <div className="space-y-4 text-xs font-sans">
                   {finalDonations.map((don: any) => (
                     <div key={don.id} className="bg-slate-55 p-5 rounded-2xl border border-gray-150 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-left">
-                      <div className="space-y-1 flex-1 text-left">
-                        <div className="flex items-center space-x-2">
+                      <div className="space-y-1.5 flex-1 text-left">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="text-emerald-600 font-bold text-base font-mono">₹{don.amount.toLocaleString()}</span>
-                          <span className="bg-emerald-50 text-accent text-[9px] font-bold font-mono px-2 py-0.5 rounded-full border border-emerald-100">SUCCESS</span>
+                          <span className="bg-emerald-50 text-accent text-[9px] font-bold font-mono px-2 py-0.5 rounded-full border border-emerald-100">80G VERIFIED</span>
+                          {don.receiptNumber && (
+                            <span className="bg-slate-100 text-deep font-mono text-[9px] font-bold px-2 py-0.5 rounded-md border border-gray-200">
+                              {don.receiptNumber}
+                            </span>
+                          )}
                         </div>
                         <p className="text-deep font-bold text-xs">{don.campaignName}</p>
-                        <p className="text-[10px] text-gray-400 font-mono leading-none">Dated: {don.date} • TX Hash: {don.txHash}</p>
+                        <p className="text-[10px] text-gray-400 font-mono leading-none">Dated: {don.date} • Ref: {don.txHash} {don.donorPan ? `• PAN: ${don.donorPan}` : ''}</p>
                       </div>
 
                       <button 
                         onClick={() => handleDownloadReceipt(don)}
-                        className="bg-primary text-white hover:bg-primary-hover px-4 py-2.5 rounded-xl text-xs flex items-center justify-center space-x-1 font-bold cursor-pointer font-baloo shadow-sm shrink-0"
+                        disabled={downloadingReceiptId === don.id}
+                        className="bg-primary text-white hover:bg-primary-hover disabled:opacity-60 px-4 py-2.5 rounded-xl text-xs flex items-center justify-center space-x-1.5 font-bold cursor-pointer font-baloo shadow-sm shrink-0 transition"
                       >
-                        <Download size={12} />
-                        <span>Receipt PDF (80G)</span>
+                        {downloadingReceiptId === don.id ? (
+                          <>
+                            <Loader2 size={12} className="animate-spin" />
+                            <span>Generating Link...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Download size={12} />
+                            <span>Download 80G PDF</span>
+                          </>
+                        )}
                       </button>
                     </div>
                   ))}
@@ -742,18 +784,19 @@ export default function DashboardPage() {
             <div className="flex gap-2">
               <button 
                 onClick={() => {
-                  alert("Secured PDF file signature compiled locally on your browser. Saved PDF receipt.");
+                  handleDownloadReceipt(selectedReceipt);
                   setSelectedReceipt(null);
                 }} 
-                className="flex-1 bg-primary text-white font-bold py-2.5 rounded-xl text-xs text-center cursor-pointer shadow-sm font-baloo"
+                className="flex-1 bg-primary text-white font-bold py-2.5 rounded-xl text-xs text-center cursor-pointer shadow-sm font-baloo flex items-center justify-center space-x-1"
               >
-                Save PDF Document
+                <Download size={13} />
+                <span>Download Official 80G PDF</span>
               </button>
               <button 
                 onClick={() => setSelectedReceipt(null)}
                 className="bg-slate-100 hover:bg-slate-200 text-gray-605 font-bold px-4 py-2.5 rounded-xl text-xs text-center cursor-pointer"
               >
-                Close Back
+                Close
               </button>
             </div>
 

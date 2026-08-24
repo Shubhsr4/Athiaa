@@ -1,240 +1,166 @@
-
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   AlertCircle,
-  Smartphone,
   Loader2,
-  ShieldCheck
+  ShieldCheck,
+  Mail,
+  Lock,
+  User,
+  MapPin,
+  CheckCircle2,
+  KeyRound,
+  ArrowLeft
 } from 'lucide-react';
-import { UserProfile } from '@/src/types';
-import { useAppContext } from '@/components/providers/AppContext';
-import { useAuth } from '@/lib/hooks/useAuth';
+import { useAuthContext } from '@/components/providers/AuthProvider';
 import { useNavigate } from 'react-router-dom';
-import { createClient } from '@/lib/supabase/client';
 
 export default function LoginPage() {
   const { t } = useTranslation();
-  const { triggerAppletActionLoader } = useAppContext();
-  const { user, loginUser } = useAuth();
-
+  const { user, signIn, signUp, resetPassword, loginUser, isAdmin } = useAuthContext();
   const navigate = useNavigate();
 
-  // Authentication subsystem state
-  const [authMethod, setAuthMethod] = useState<'otp' | 'signup'>('otp');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  // Mode state: 'signin' | 'signup' | 'forgot'
+  const [authMode, setAuthMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
+
+  // Form Fields
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [citiesValue, setCitiesValue] = useState('Mumbai');
-  const [smsSent, setSmsSent] = useState(false);
-  const [otpValue, setOtpValue] = useState('');
-  const [authError, setAuthError] = useState('');
-  const [countdown, setCountdown] = useState(30);
+  const [city, setCity] = useState('Delhi NCR');
+
+  // Status feedback state
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authSuccess, setAuthSuccess] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleDemoAdminLogin = () => {
-    triggerAppletActionLoader("Logging in as Demo Admin...", "Syncing NGO Administrator privileges...", () => {
-      const demoAdminProfile: UserProfile = {
-        uid: `admin-demo-${Date.now()}`,
-        name: 'Demo Administrator',
-        phone: '+91 9999999999',
-        city: 'Delhi NCR',
-        registeredAt: new Date().toLocaleDateString('en-IN'),
-        role: 'Admin'
-      };
-      loginUser(demoAdminProfile);
-      navigate('/admin');
-    });
-  };
-
-  // OTP Countdown timer
-  useEffect(() => {
-    let timer: any;
-    if (smsSent && countdown > 0) {
-      timer = setInterval(() => setCountdown(c => c - 1), 1000);
-    }
-    return () => clearInterval(timer);
-  }, [smsSent, countdown]);
-
-  // Redirect if already logged in
+  // Redirect if already authenticated
   useEffect(() => {
     if (user) {
-      navigate(user.role?.toLowerCase() === 'admin' ? '/admin' : '/dashboard');
+      navigate(isAdmin ? '/admin' : '/dashboard');
     }
-  }, [user, navigate]);
+  }, [user, isAdmin, navigate]);
 
-  const handleRequestOTP = async (e: React.FormEvent) => {
+  // Handle Email + Password Sign In
+  const handleSignInSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (phoneNumber.length !== 10) {
-      setAuthError("Enter a valid 10-digit Indian mobile number");
-      return;
-    }
-    setAuthError('');
+    setAuthError(null);
+    setAuthSuccess(null);
     setIsSubmitting(true);
 
     try {
-      const supabase = createClient();
-      if (supabase) {
-        // Try generate-otp first, fallback to send-otp
-        let { data, error } = await supabase.functions.invoke('generate-otp', {
-          body: { phone: phoneNumber }
-        });
-
-        if (error || (data && !data.success)) {
-          // Fallback to send-otp
-          const res = await supabase.functions.invoke('send-otp', {
-            body: { phone: phoneNumber }
-          });
-          if (!res.error && res.data?.success) {
-            data = res.data;
-            error = null;
-          }
+      const { data, error } = await signIn(email.trim(), password);
+      if (error) {
+        if (error.message?.includes('Email not confirmed')) {
+          setAuthError('Your email address is not verified yet. Please check your inbox for the confirmation link.');
+        } else {
+          setAuthError(error.message || 'Invalid email or password.');
         }
-
-        if (error) {
-          console.warn('OTP send notice:', error);
-          let errorMsg = error.message;
-          try {
-            const parsedCtx = await error.context?.json();
-            if (parsedCtx?.error) errorMsg = parsedCtx.error;
-          } catch {}
-
-          if (errorMsg?.includes('Twilio') || errorMsg?.includes('unverified')) {
-            setAuthError("Remote Edge Function requires deployment with MSG91 secrets. For instant testing, use test OTP code 123456.");
-            setSmsSent(true);
-            setCountdown(30);
-            setIsSubmitting(false);
-            return;
-          }
-
-          if (error.message?.includes('Failed to send a request') || error.message?.includes('FunctionsFetchError')) {
-            setSmsSent(true);
-            setCountdown(30);
-            setIsSubmitting(false);
-            return;
-          }
-
-          setAuthError(errorMsg || "Failed to transmit OTP code via SMS.");
-          setIsSubmitting(false);
-          return;
-        }
-
-        if (data && !data.success) {
-          setAuthError(data.error || "Failed to send OTP.");
-          setIsSubmitting(false);
-          return;
-        }
+      } else if (data?.user) {
+        navigate('/dashboard');
       }
-
-      setSmsSent(true);
-      setCountdown(30);
     } catch (err: any) {
-      // Fallback for network / edge function errors
-      setSmsSent(true);
-      setCountdown(30);
+      setAuthError(err.message || 'Failed to sign in.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleVerifyOTP = async (e: React.FormEvent) => {
+  // Handle Email + Password Sign Up
+  const handleSignUpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!otpValue || otpValue.length < 4) {
-      setAuthError("Please enter the complete OTP code");
+    if (!email.trim() || !password || !fullName.trim()) {
+      setAuthError('Please fill in all required fields.');
       return;
     }
-    setAuthError('');
+    if (password.length < 6) {
+      setAuthError('Password must be at least 6 characters long.');
+      return;
+    }
+
+    setAuthError(null);
+    setAuthSuccess(null);
     setIsSubmitting(true);
 
     try {
-      const supabase = createClient();
-      let verifiedSession: any = null;
-      let verifiedUser: any = null;
+      const { data, error } = await signUp(email.trim(), password, {
+        full_name: fullName.trim(),
+        city: city
+      });
 
-      if (supabase) {
-        const { data, error } = await supabase.functions.invoke('verify-otp', {
-          body: { 
-            phone: phoneNumber, 
-            otp: otpValue,
-            name: fullName || undefined,
-            city: citiesValue || undefined
-          }
-        });
-
-        if (error) {
-          console.warn('verify-otp error:', error);
-          if (otpValue === '1234' || otpValue === '123456' || error.message?.includes('Failed to send a request') || error.message?.includes('FunctionsFetchError')) {
-            // Fallback local verification for preview mode or test OTP
-            const fallbackProfile: UserProfile = {
-              uid: `u-${Date.now()}`,
-              name: fullName || `Member-${phoneNumber.slice(-4)}`,
-              phone: `+91 ${phoneNumber}`,
-              city: citiesValue,
-              avatarUrl: undefined,
-              registeredAt: new Date().toLocaleDateString('en-IN'),
-              role: phoneNumber === '9999999999' ? 'Admin' : 'General'
-            };
-            loginUser(fallbackProfile);
-            setIsSubmitting(false);
-            return;
-          }
-          let errorMsg = error.message;
-          try {
-            const parsedCtx = await error.context?.json();
-            if (parsedCtx?.error) errorMsg = parsedCtx.error;
-          } catch {}
-          setAuthError(errorMsg || "OTP verification failed. Please check your code.");
-          setIsSubmitting(false);
-          return;
+      if (error) {
+        if (error.message?.toLowerCase().includes('rate limit')) {
+          setAuthError('Supabase default email SMTP rate limit reached (max 3 confirmation emails/hr). To test sign-ups freely: in Supabase Dashboard go to Authentication -> Providers -> Email -> turn OFF "Confirm email". Or use Instant Demo Admin Sign-In below.');
+        } else {
+          setAuthError(error.message || 'Sign up failed.');
         }
-
-        if (data && !data.success) {
-          setAuthError(data.error || "Invalid or expired OTP code.");
-          setIsSubmitting(false);
-          return;
-        }
-
-        if (data?.session) {
-          verifiedSession = data.session;
-          await supabase.auth.setSession({
-            access_token: data.session.access_token,
-            refresh_token: data.session.refresh_token
-          });
-        }
-        if (data?.user) {
-          verifiedUser = data.user;
-        }
+      } else {
+        setAuthSuccess('Account created successfully! If email confirmation is enabled, check your inbox. Otherwise, you can sign in directly!');
+        setEmail('');
+        setPassword('');
+        setFullName('');
       }
-
-      const dummyProfile: UserProfile = {
-        uid: verifiedUser?.id || `u-${Date.now()}`,
-        name: fullName || verifiedUser?.user_metadata?.full_name || `Member-${phoneNumber.slice(-4)}`,
-        phone: `+91 ${phoneNumber}`,
-        city: citiesValue,
-        avatarUrl: undefined,
-        registeredAt: new Date().toLocaleDateString('en-IN'),
-        role: phoneNumber === '9999999999' ? 'Admin' : 'General'
-      };
-
-      loginUser(dummyProfile);
     } catch (err: any) {
-      setAuthError(err.message || "An error occurred during verification.");
+      setAuthError(err.message || 'Sign up error.');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Handle Forgot Password
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) {
+      setAuthError('Please enter your registered email address.');
+      return;
+    }
+
+    setAuthError(null);
+    setAuthSuccess(null);
+    setIsSubmitting(true);
+
+    try {
+      const { error } = await resetPassword(email.trim());
+      if (error) {
+        setAuthError(error.message || 'Failed to send password reset email.');
+      } else {
+        setAuthSuccess('Password reset link sent! Please check your email inbox.');
+      }
+    } catch (err: any) {
+      setAuthError(err.message || 'Reset password error.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Demo Admin quick sign-in helper
+  const handleDemoAdminLogin = () => {
+    loginUser({
+      uid: `admin-demo-${Date.now()}`,
+      name: 'Demo Administrator',
+      email: 'admin@athiaa.org',
+      city: 'Delhi NCR',
+      role: 'Admin'
+    });
+    navigate('/admin');
   };
 
   return (
-    <div className="max-w-md mx-auto px-4 py-24 text-left font-sans space-y-6">
+    <div className="max-w-md mx-auto px-4 py-20 text-left font-sans space-y-6">
       <div className="bg-white rounded-3xl overflow-hidden shadow-warm border border-orange-50">
         
+        {/* Header */}
         <div className="bg-[#1C1C2E] p-6 text-white text-center relative space-y-2 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-[#E8572A]/20 to-transparent pointer-events-none" />
-          <p className="text-2xl font-bold font-baloo">Athiaa Login</p>
-          <p className="text-[11px] text-gray-300 font-medium leading-relaxed">Log in to track adoption cases, foster updates, and receive 80G tax benefit invoices.</p>
+          <p className="text-2xl font-bold font-baloo">Athiaa Portal Account</p>
+          <p className="text-[11px] text-gray-300 font-medium leading-relaxed">
+            JWT email authentication & role portal for donors, volunteers, rescuers, and staff.
+          </p>
         </div>
 
         <div className="p-6 space-y-4">
-          {/* Quick Demo Admin Account Card */}
+          
+          {/* Quick Demo Admin Banner */}
           <div className="bg-gradient-to-r from-[#E8572A] to-amber-500 p-4 rounded-2xl text-white shadow-warm space-y-2.5">
             <div className="flex justify-between items-center">
               <span className="text-[9px] font-extrabold uppercase tracking-wider font-mono bg-white/20 px-2 py-0.5 rounded-md">
@@ -243,9 +169,9 @@ export default function LoginPage() {
               <span className="text-[10px] font-mono font-bold text-amber-100">Role: Administrator</span>
             </div>
             <div>
-              <h4 className="font-baloo text-base font-bold leading-tight">Instant Demo Admin Account</h4>
+              <h4 className="font-baloo text-base font-bold leading-tight">Instant Demo Admin Login</h4>
               <p className="text-[11px] text-orange-100 mt-0.5 leading-snug">
-                Click below to overview the NGO command console, rescue triage, adoptions, and volunteer rosters instantly.
+                Overview the NGO operations console, volunteer roster, adoptions, and rescue dispatch.
               </p>
             </div>
             <button
@@ -258,153 +184,210 @@ export default function LoginPage() {
             </button>
           </div>
 
+          {/* Feedback messages */}
           {authError && (
-            <div className="bg-red-50 text-red-700 p-3 rounded-xl border border-red-100 flex items-start gap-1.5 text-xs font-semibold leading-normal">
-              <AlertCircle size={14} className="shrink-0 mt-0.5" />
+            <div className="bg-rose-50 text-rose-800 p-3.5 rounded-2xl border border-rose-200 flex items-start gap-2 text-xs font-semibold leading-relaxed">
+              <AlertCircle size={16} className="shrink-0 mt-0.5 text-rose-600" />
               <span>{authError}</span>
             </div>
           )}
 
-          {!smsSent ? (
-            <div className="space-y-4">
-              
-              {/* Method selector */}
-              <div className="flex bg-cream p-1 rounded-xl border">
-                <button 
-                  type="button"
-                  onClick={() => setAuthMethod('otp')}
-                  className={`flex-1 text-center py-2.5 rounded-lg text-xs font-bold cursor-pointer transition ${authMethod === 'otp' ? 'bg-primary text-white shadow' : 'text-gray-500 hover:text-deep'}`}
-                >
-                  Phone OTP
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => setAuthMethod('signup')}
-                  className={`flex-1 text-center py-2.5 rounded-lg text-xs font-bold cursor-pointer transition ${authMethod === 'signup' ? 'bg-primary text-white shadow' : 'text-gray-500 hover:text-deep'}`}
-                >
-                  New Account
-                </button>
-              </div>
-
-              {authMethod === 'otp' ? (
-                <form onSubmit={handleRequestOTP} className="space-y-3 font-sans text-xs text-left">
-                  <div className="space-y-1 block">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase block">10-Digit Mobile Number *</label>
-                    <div className="relative font-mono">
-                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 font-sans text-xs">+91</span>
-                      <input 
-                        type="tel" 
-                        maxLength={10}
-                        required
-                        disabled={isSubmitting}
-                        value={phoneNumber}
-                        onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-                        placeholder="e.g. 9876543210" 
-                        className="w-full bg-cream border border-orange-50 rounded-xl py-3 pl-12 pr-4 font-mono text-xs focus:outline-none focus:border-primary text-deep font-semibold"
-                      />
-                    </div>
-                  </div>
-
-                  <button 
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3.5 rounded-xl uppercase tracking-wider text-xs font-baloo cursor-pointer shadow-sm text-center flex items-center justify-center space-x-2 disabled:opacity-50"
-                  >
-                    {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <span>Send One-Time Code OTP</span>}
-                  </button>
-                </form>
-              ) : (
-                <form onSubmit={handleRequestOTP} className="space-y-3 font-sans text-xs text-left">
-                  <div className="space-y-1 block">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase block font-sans">Full Name *</label>
-                    <input 
-                      type="text" 
-                      required
-                      disabled={isSubmitting}
-                      placeholder="e.g. Shruti Sen" 
-                      value={fullName}
-                      onChange={e => setFullName(e.target.value)}
-                      className="w-full bg-cream border border-orange-50 rounded-xl p-3 focus:outline-none focus:border-primary text-deep font-semibold"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-left">
-                    <div className="space-y-1 block">
-                      <label className="text-[10px] font-bold text-gray-400 uppercase block font-sans">Mobile Phone *</label>
-                      <input 
-                        type="tel" 
-                        maxLength={10}
-                        required
-                        disabled={isSubmitting}
-                        placeholder="e.g. 9876543210" 
-                        value={phoneNumber}
-                        onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-                        className="w-full bg-cream border border-orange-50 rounded-xl p-3 font-mono focus:outline-none focus:border-primary text-deep font-semibold"
-                      />
-                    </div>
-                    <div className="space-y-1 block">
-                      <label className="text-[10px] font-bold text-gray-400 uppercase block font-sans">Preferred City</label>
-                      <select 
-                        value={citiesValue}
-                        disabled={isSubmitting}
-                        onChange={e => setCitiesValue(e.target.value)}
-                        className="w-full bg-cream border border-orange-50 rounded-xl p-3 text-xs text-deep outline-none focus:border-primary font-bold"
-                      >
-                        <option>Mumbai</option>
-                        <option>Bengaluru</option>
-                        <option>Delhi NCR</option>
-                        <option>Pune</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <button 
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3.5 rounded-xl uppercase tracking-wider text-xs font-baloo cursor-pointer shadow-sm text-center flex items-center justify-center space-x-2 disabled:opacity-50"
-                  >
-                    {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <span>Create Account & Send OTP</span>}
-                  </button>
-                </form>
-              )}
-
+          {authSuccess && (
+            <div className="bg-emerald-50 text-emerald-800 p-3.5 rounded-2xl border border-emerald-200 flex items-start gap-2 text-xs font-semibold leading-relaxed">
+              <CheckCircle2 size={16} className="shrink-0 mt-0.5 text-emerald-600" />
+              <span>{authSuccess}</span>
             </div>
-          ) : (
-            <form onSubmit={handleVerifyOTP} className="space-y-4 font-sans text-xs text-center">
-              <div className="space-y-1">
-                <Smartphone size={24} className="mx-auto text-primary" />
-                <p className="font-bold text-deep font-baloo">Enter Verification OTP</p>
-                <p className="text-[10px] text-gray-400 font-semibold font-mono">CODE SENT TO +91-{phoneNumber}</p>
+          )}
+
+          {/* Mode Selector Tabs (Sign In / Sign Up) */}
+          {authMode !== 'forgot' && (
+            <div className="flex bg-cream p-1 rounded-xl border border-orange-100">
+              <button 
+                type="button"
+                onClick={() => { setAuthMode('signin'); setAuthError(null); setAuthSuccess(null); }}
+                className={`flex-1 text-center py-2.5 rounded-lg text-xs font-bold cursor-pointer transition ${authMode === 'signin' ? 'bg-primary text-white shadow-sm' : 'text-gray-500 hover:text-deep'}`}
+              >
+                Sign In
+              </button>
+              <button 
+                type="button"
+                onClick={() => { setAuthMode('signup'); setAuthError(null); setAuthSuccess(null); }}
+                className={`flex-1 text-center py-2.5 rounded-lg text-xs font-bold cursor-pointer transition ${authMode === 'signup' ? 'bg-primary text-white shadow-sm' : 'text-gray-500 hover:text-deep'}`}
+              >
+                New Account
+              </button>
+            </div>
+          )}
+
+          {/* SIGN IN FORM */}
+          {authMode === 'signin' && (
+            <form onSubmit={handleSignInSubmit} className="space-y-3 text-xs">
+              <div className="space-y-1 block">
+                <label className="text-[10px] font-bold text-gray-400 uppercase block font-mono">Email Address *</label>
+                <div className="relative">
+                  <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input 
+                    type="email" 
+                    required
+                    disabled={isSubmitting}
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="e.g. donor@athiaa.org" 
+                    className="w-full bg-cream border border-orange-100 rounded-xl py-3 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:border-primary text-deep"
+                  />
+                </div>
               </div>
 
               <div className="space-y-1 block">
-                <input 
-                  type="text" 
-                  maxLength={6}
-                  required
-                  disabled={isSubmitting}
-                  value={otpValue}
-                  onChange={e => setOtpValue(e.target.value.replace(/\D/g, ''))}
-                  placeholder="Enter OTP" 
-                  className="w-44 mx-auto bg-cream border border-orange-50 rounded-xl p-3 text-center tracking-widest font-mono text-lg focus:outline-none focus:border-primary text-deep"
-                />
+                <div className="flex justify-between items-center">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase block font-mono">Password *</label>
+                  <button 
+                    type="button" 
+                    onClick={() => { setAuthMode('forgot'); setAuthError(null); setAuthSuccess(null); }}
+                    className="text-[10px] font-bold text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+                <div className="relative">
+                  <Lock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input 
+                    type="password" 
+                    required
+                    disabled={isSubmitting}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="Enter account password" 
+                    className="w-full bg-cream border border-orange-100 rounded-xl py-3 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:border-primary text-deep"
+                  />
+                </div>
               </div>
 
               <button 
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-accent hover:bg-green-700 text-white font-bold py-3 rounded-xl uppercase tracking-wider font-baloo text-xs cursor-pointer shadow-sm text-center flex items-center justify-center space-x-2 disabled:opacity-50"
+                className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3.5 rounded-xl uppercase tracking-wider text-xs font-baloo cursor-pointer shadow-sm text-center flex items-center justify-center space-x-2 disabled:opacity-50"
               >
-                {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <span>Verify OTP & Sign In</span>}
+                {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <span>Sign In to Account</span>}
               </button>
+            </form>
+          )}
 
-              <div className="text-center font-mono text-[10px] mt-2">
-                {countdown > 0 ? (
-                  <span className="text-gray-400">Resend code available in: {countdown}s</span>
-                ) : (
-                  <button type="button" onClick={() => { setSmsSent(false); }} className="text-primary hover:underline font-bold">Resend verification SMS</button>
-                )}
+          {/* SIGN UP FORM */}
+          {authMode === 'signup' && (
+            <form onSubmit={handleSignUpSubmit} className="space-y-3 text-xs">
+              <div className="space-y-1 block">
+                <label className="text-[10px] font-bold text-gray-400 uppercase block font-mono">Full Name *</label>
+                <div className="relative">
+                  <User size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input 
+                    type="text" 
+                    required
+                    disabled={isSubmitting}
+                    placeholder="e.g. Shruti Sen" 
+                    value={fullName}
+                    onChange={e => setFullName(e.target.value)}
+                    className="w-full bg-cream border border-orange-100 rounded-xl py-3 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:border-primary text-deep"
+                  />
+                </div>
               </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="space-y-1 block">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase block font-mono">Email Address *</label>
+                  <input 
+                    type="email" 
+                    required
+                    disabled={isSubmitting}
+                    placeholder="e.g. name@example.com" 
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    className="w-full bg-cream border border-orange-100 rounded-xl p-3 text-xs font-semibold focus:outline-none focus:border-primary text-deep"
+                  />
+                </div>
+                <div className="space-y-1 block">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase block font-mono">Preferred City</label>
+                  <select 
+                    value={city}
+                    disabled={isSubmitting}
+                    onChange={e => setCity(e.target.value)}
+                    className="w-full bg-cream border border-orange-100 rounded-xl p-3 text-xs text-deep outline-none focus:border-primary font-bold"
+                  >
+                    <option>Delhi NCR</option>
+                    <option>Mumbai</option>
+                    <option>Bengaluru</option>
+                    <option>Pune</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1 block">
+                <label className="text-[10px] font-bold text-gray-400 uppercase block font-mono">Password (Min 6 chars) *</label>
+                <div className="relative">
+                  <Lock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input 
+                    type="password" 
+                    required
+                    minLength={6}
+                    disabled={isSubmitting}
+                    placeholder="Create secure password" 
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    className="w-full bg-cream border border-orange-100 rounded-xl py-3 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:border-primary text-deep"
+                  />
+                </div>
+              </div>
+
+              <p className="text-[10px] text-gray-400 font-medium leading-relaxed">
+                By signing up, you will automatically be assigned default <span className="font-bold text-primary font-mono uppercase">Donor</span> role privileges.
+              </p>
+
+              <button 
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3.5 rounded-xl uppercase tracking-wider text-xs font-baloo cursor-pointer shadow-sm text-center flex items-center justify-center space-x-2 disabled:opacity-50"
+              >
+                {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <span>Create Account & Send Verification</span>}
+              </button>
+            </form>
+          )}
+
+          {/* FORGOT PASSWORD FORM */}
+          {authMode === 'forgot' && (
+            <form onSubmit={handleForgotSubmit} className="space-y-3 text-xs">
+              <div className="flex items-center gap-2 mb-2">
+                <button 
+                  type="button" 
+                  onClick={() => { setAuthMode('signin'); setAuthError(null); setAuthSuccess(null); }}
+                  className="text-gray-400 hover:text-deep flex items-center gap-1 font-bold text-[11px]"
+                >
+                  <ArrowLeft size={14} /> Back to Sign In
+                </button>
+              </div>
+
+              <div className="space-y-1 block">
+                <label className="text-[10px] font-bold text-gray-400 uppercase block font-mono">Registered Email Address *</label>
+                <div className="relative">
+                  <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input 
+                    type="email" 
+                    required
+                    disabled={isSubmitting}
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="e.g. name@example.com" 
+                    className="w-full bg-cream border border-orange-100 rounded-xl py-3 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:border-primary text-deep"
+                  />
+                </div>
+              </div>
+
+              <button 
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3.5 rounded-xl uppercase tracking-wider text-xs font-baloo cursor-pointer shadow-sm text-center flex items-center justify-center space-x-2 disabled:opacity-50"
+              >
+                {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <span>Send Password Reset Email</span>}
+              </button>
             </form>
           )}
 
