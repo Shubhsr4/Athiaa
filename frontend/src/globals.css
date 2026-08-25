@@ -234,3 +234,62 @@
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* ==========================================================================
+   Zero-Jank GPU Scroll Reveal System (Opacity + Transform Only)
+   ========================================================================== */
+
+.reveal-container {
+  will-change: opacity, transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+  transition-property: opacity, transform;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-up {
+  opacity: 0;
+  transform: translate3d(0, 20px, 0);
+}
+
+.reveal-down {
+  opacity: 0;
+  transform: translate3d(0, -20px, 0);
+}
+
+.reveal-left {
+  opacity: 0;
+  transform: translate3d(20px, 0, 0);
+}
+
+.reveal-right {
+  opacity: 0;
+  transform: translate3d(-20px, 0, 0);
+}
+
+.reveal-fade {
+  opacity: 0;
+  transform: translate3d(0, 0, 0);
+}
+
+.reveal-visible {
+  opacity: 1 !important;
+  transform: translate3d(0, 0, 0) !important;
+}
+
+/* Accessibility: Instantly disable all reveal transitions when reduced motion is preferred */
+@media (prefers-reduced-motion: reduce) {
+  .reveal-container,
+  .reveal-up,
+  .reveal-down,
+  .reveal-left,
+  .reveal-right,
+  .reveal-fade {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    will-change: auto !important;
+  }
+}
+

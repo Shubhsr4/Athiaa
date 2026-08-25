@@ -27,6 +27,7 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { useCampaigns } from '@/lib/hooks/useCampaigns';
 import { useSettings } from '@/lib/hooks/useSettings';
 import { useDonationFlow } from '@/lib/hooks/useDonations';
+import Reveal from '@/components/ui/Reveal';
 
 const LOCAL_INITIAL_CAMPAIGNS = [
   {
@@ -423,7 +424,7 @@ export default function DonatePage() {
 
             {/* Donation Tiers Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {(((settings as any)?.donation_presets as number[]) || [100, 250, 500, 1000, 2500]).map((amt) => {
+              {(((settings as any)?.donation_presets as number[]) || [100, 250, 500, 1000, 2500]).map((amt, idx) => {
                 let label = "General donation support for strays";
                 if (amt <= 100) {
                   label = "Feed a stray dog for a full week";
@@ -438,45 +439,48 @@ export default function DonatePage() {
                 }
                 const tier = { amt, label };
                 return (
-                  <div 
-                    key={tier.amt}
-                    onClick={() => {
-                      setSelectedTier(tier.amt);
-                      setCustomAmount('');
-                    }}
-                    className={`p-4 rounded-2xl border-2 cursor-pointer transition flex items-start space-x-3 text-left ${
-                      selectedTier === tier.amt ? 'bg-orange-50/60 border-primary shadow-sm' : 'bg-white border-orange-50 hover:bg-cream/40'
-                    }`}
-                  >
-                    <div className="text-xs">
-                      <p className="font-bold text-lg text-deep">₹{tier.amt}</p>
-                      <p className="text-gray-500 font-sans font-medium">{tier.label}</p>
+                  <Reveal key={tier.amt} direction="up" staggerIndex={idx}>
+                    <div 
+                      onClick={() => {
+                        setSelectedTier(tier.amt);
+                        setCustomAmount('');
+                      }}
+                      className={`p-4 rounded-2xl border-2 cursor-pointer transition flex items-start space-x-3 text-left h-full ${
+                        selectedTier === tier.amt ? 'bg-orange-50/60 border-primary shadow-sm' : 'bg-white border-orange-50 hover:bg-cream/40'
+                      }`}
+                    >
+                      <div className="text-xs">
+                        <p className="font-bold text-lg text-deep">₹{tier.amt}</p>
+                        <p className="text-gray-500 font-sans font-medium">{tier.label}</p>
+                      </div>
                     </div>
-                  </div>
+                  </Reveal>
                 );
               })}
 
-              <div 
-                onClick={() => setSelectedTier('custom')}
-                className={`p-4 rounded-2xl border-2 cursor-pointer transition flex flex-col justify-between ${
-                  selectedTier === 'custom' ? 'bg-orange-50/60 border-primary shadow-sm' : 'bg-white border-orange-50 hover:bg-cream/40'
-                }`}
-              >
-                <div className="text-xs text-left">
-                  <p className="font-bold text-lg text-deep">₹ Custom INR</p>
-                  <p className="text-gray-400 font-sans font-medium">Verify custom tax invoice receipt</p>
+              <Reveal direction="up" staggerIndex={5}>
+                <div 
+                  onClick={() => setSelectedTier('custom')}
+                  className={`p-4 rounded-2xl border-2 cursor-pointer transition flex flex-col justify-between h-full ${
+                    selectedTier === 'custom' ? 'bg-orange-50/60 border-primary shadow-sm' : 'bg-white border-orange-50 hover:bg-cream/40'
+                  }`}
+                >
+                  <div className="text-xs text-left">
+                    <p className="font-bold text-lg text-deep">₹ Custom INR</p>
+                    <p className="text-gray-400 font-sans font-medium">Verify custom tax invoice receipt</p>
+                  </div>
+                  {selectedTier === 'custom' && (
+                    <input 
+                      type="text" 
+                      placeholder="Enter Custom (e.g. 5000)" 
+                      value={customAmount}
+                      onChange={e => setCustomAmount(e.target.value.replace(/\D/g, ''))}
+                      className="w-full bg-white border border-primary/20 rounded-lg p-1.5 mt-2 text-xs font-mono focus:outline-none"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  )}
                 </div>
-                {selectedTier === 'custom' && (
-                  <input 
-                    type="text" 
-                    placeholder="Enter Custom (e.g. 5000)" 
-                    value={customAmount}
-                    onChange={e => setCustomAmount(e.target.value.replace(/\D/g, ''))}
-                    className="w-full bg-white border border-primary/20 rounded-lg p-1.5 mt-2 text-xs font-mono focus:outline-none"
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                )}
-              </div>
+              </Reveal>
             </div>
 
             {/* Section 80G tax check */}
@@ -526,126 +530,130 @@ export default function DonatePage() {
         <div className="lg:col-span-5 space-y-6">
           
           {/* TAX BRACKET BANNER */}
-          <div className="bg-deep text-white p-6 rounded-3xl space-y-4 shadow-xl relative overflow-hidden text-left">
-            <span className="absolute top-4 right-4 text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-full text-[9px] font-mono tracking-wider flex items-center border border-emerald-500/20">
-              <ShieldCheck size={10} className="mr-0.5" /> 80G Compliant
-            </span>
+          <Reveal direction="up">
+            <div className="bg-deep text-white p-6 rounded-3xl space-y-4 shadow-xl relative overflow-hidden text-left">
+              <span className="absolute top-4 right-4 text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-full text-[9px] font-mono tracking-wider flex items-center border border-emerald-500/20">
+                <ShieldCheck size={10} className="mr-0.5" /> 80G Compliant
+              </span>
 
-            <h3 className="text-xl font-bold font-baloo text-secondary leading-tight">Tax Free Charitable Exemption</h3>
-            <p className="text-xs text-gray-300 leading-relaxed font-sans">
-              Athiaa Animal Welfare registered is authorized as a Section 8 Nonprofit Organization. All Indian residents are eligible to save 50% on income-tax deductions.
-            </p>
+              <h3 className="text-xl font-bold font-baloo text-secondary leading-tight">Tax Free Charitable Exemption</h3>
+              <p className="text-xs text-gray-300 leading-relaxed font-sans">
+                Athiaa Animal Welfare registered is authorized as a Section 8 Nonprofit Organization. All Indian residents are eligible to save 50% on income-tax deductions.
+              </p>
 
-            <div className="border-t border-white/5 pt-3 grid grid-cols-2 gap-3 text-[10px] text-gray-400 font-mono">
-              <div>
-                <p>CERTIFICATE 80G No.</p>
-                <p className="text-white font-semibold">CIT-EXPT/80G/ATH-ND2025</p>
-              </div>
-              <div>
-                <p>CERTIFICATE 12A Ref.</p>
-                <p className="text-white font-semibold">12A/TRUST-REG/25B084</p>
+              <div className="border-t border-white/5 pt-3 grid grid-cols-2 gap-3 text-[10px] text-gray-400 font-mono">
+                <div>
+                  <p>CERTIFICATE 80G No.</p>
+                  <p className="text-white font-semibold">CIT-EXPT/80G/ATH-ND2025</p>
+                </div>
+                <div>
+                  <p>CERTIFICATE 12A Ref.</p>
+                  <p className="text-white font-semibold">12A/TRUST-REG/25B084</p>
+                </div>
               </div>
             </div>
-          </div>
+          </Reveal>
 
           {/* ACTIVE CAMPAIGN STACK */}
-          <div className="bg-white p-6 rounded-3xl border border-orange-50 shadow-warm space-y-6">
-            <h4 className="text-lg font-bold font-baloo text-deep border-b border-orange-50 pb-2 flex items-center space-x-2">
-              <TrendingUp size={18} className="text-primary" />
-              <span>Active Recovery Fundraisers</span>
-            </h4>
+          <Reveal direction="up">
+            <div className="bg-white p-6 rounded-3xl border border-orange-50 shadow-warm space-y-6">
+              <h4 className="text-lg font-bold font-baloo text-deep border-b border-orange-50 pb-2 flex items-center space-x-2">
+                <TrendingUp size={18} className="text-primary" />
+                <span>Active Recovery Fundraisers</span>
+              </h4>
 
-            <div className="space-y-4 text-left font-sans">
-              {campaignsList.map((camp) => (
-                <div key={camp.id} className="space-y-2 border-b border-gray-100 pb-3 last:border-none last:pb-0">
-                  <div className="flex justify-between items-baseline gap-2">
-                    <h5 className="font-bold text-xs text-deep truncate hover:text-primary transition">{camp.title}</h5>
-                    <span className="text-[10px] text-primary font-bold font-mono shrink-0">{camp.daysRemaining}d left</span>
-                  </div>
-                  
-                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                    <div 
-                      className="bg-primary h-full rounded-full"
-                      style={{ width: `${(camp.raisedAmount / camp.goalAmount) * 100}%` }}
-                    />
-                  </div>
+              <div className="space-y-4 text-left font-sans">
+                {campaignsList.map((camp) => (
+                  <div key={camp.id} className="space-y-2 border-b border-gray-100 pb-3 last:border-none last:pb-0">
+                    <div className="flex justify-between items-baseline gap-2">
+                      <h5 className="font-bold text-xs text-deep truncate hover:text-primary transition">{camp.title}</h5>
+                      <span className="text-[10px] text-primary font-bold font-mono shrink-0">{camp.daysRemaining}d left</span>
+                    </div>
+                    
+                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                      <div 
+                        className="bg-primary h-full rounded-full"
+                        style={{ width: `${(camp.raisedAmount / camp.goalAmount) * 100}%` }}
+                      />
+                    </div>
 
-                  <div className="flex justify-between text-[10px] font-mono text-gray-500">
-                    <span>Raised: ₹{camp.raisedAmount.toLocaleString()}</span>
-                    <span>Goal: ₹{camp.goalAmount.toLocaleString()}</span>
-                  </div>
+                    <div className="flex justify-between text-[10px] font-mono text-gray-500">
+                      <span>Raised: ₹{camp.raisedAmount.toLocaleString()}</span>
+                      <span>Goal: ₹{camp.goalAmount.toLocaleString()}</span>
+                    </div>
 
-                  <button 
-                    type="button"
-                    onClick={() => {
-                      setSelectedCampaign(camp.title);
-                      setSelectedTier(1000);
-                      triggerAppletActionLoader("Campaign target selected", `Switching focus context to: ${camp.title}`);
-                    }}
-                    className="text-[10px] text-primary font-bold hover:underline cursor-pointer flex items-center space-x-1"
-                  >
-                    <span>Set Focus to this Fundraiser</span>
-                    <ChevronRight size={12} />
-                  </button>
-                </div>
-              ))}
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        setSelectedCampaign(camp.title);
+                        setSelectedTier(1000);
+                      }}
+                      className="text-[10px] text-primary font-bold hover:underline cursor-pointer flex items-center space-x-1"
+                    >
+                      <span>Set Focus to this Fundraiser</span>
+                      <ChevronRight size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          </Reveal>
 
           {/* REAL TIME TICKER DONORS MARQUEE */}
-          <div className="bg-white p-6 rounded-3xl border border-orange-50 shadow-warm space-y-4 text-left font-sans">
-            <h4 className="text-sm font-bold text-gray-400 tracking-wider uppercase font-mono">Live Benevolence Ticker</h4>
-            
-            <div className="space-y-3 max-h-48 overflow-y-auto no-scrollbar">
-              {donationsTicker.map((tick, i) => (
-                <div key={i} className="flex justify-between items-center bg-cream/70 p-2.5 rounded-xl border border-orange-100/30 text-xs text-left">
-                  <div className="flex items-center space-x-2">
-                    <Heart size={14} className="text-primary fill-primary/20 shrink-0" />
-                    <div>
-                      <p className="font-bold text-deep select-none">{tick.name}</p>
-                      <p className="text-[10px] text-gray-400 font-mono italic">{tick.city}</p>
+          <Reveal direction="up">
+            <div className="bg-white p-6 rounded-3xl border border-orange-50 shadow-warm space-y-4 text-left font-sans">
+              <h4 className="text-sm font-bold text-gray-400 tracking-wider uppercase font-mono">Live Benevolence Ticker</h4>
+              
+              <div className="space-y-3 max-h-48 overflow-y-auto no-scrollbar">
+                {donationsTicker.map((tick, i) => (
+                  <div key={i} className="flex justify-between items-center bg-cream/70 p-2.5 rounded-xl border border-orange-100/30 text-xs text-left">
+                    <div className="flex items-center space-x-2">
+                      <Heart size={14} className="text-primary fill-primary/20 shrink-0" />
+                      <div>
+                        <p className="font-bold text-deep select-none">{tick.name}</p>
+                        <p className="text-[10px] text-gray-400 font-mono italic">{tick.city}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-mono text-primary font-extrabold">+₹{tick.amt}</p>
+                      <p className="text-[9px] text-gray-400 font-mono">{tick.time}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-mono text-primary font-extrabold">+₹{tick.amt}</p>
-                    <p className="text-[9px] text-gray-400 font-mono">{tick.time}</p>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          </Reveal>
 
         </div>
       </div>
 
       {/* CSR FOR CORPORATE SOCIAL RESPONSIBILITY INQUIRY */}
-      <section className="bg-stone-50 border border-gray-200 rounded-3xl p-8 max-w-4xl mx-auto text-left flex flex-col md:flex-row gap-8 items-center">
-        <div className="space-y-4 md:w-1/2">
-          <div className="p-2.5 bg-yellow-100 rounded-full w-fit text-[#DFAC00] font-bold text-xs flex items-center">
-            <Briefcase size={14} className="mr-1 inline" /> Company Act 2013 Compliance
+      <Reveal direction="up" className="max-w-4xl mx-auto">
+        <section className="bg-stone-50 border border-gray-200 rounded-3xl p-8 text-left flex flex-col md:flex-row gap-8 items-center">
+          <div className="space-y-4 md:w-1/2">
+            <div className="p-2.5 bg-yellow-100 rounded-full w-fit text-[#DFAC00] font-bold text-xs flex items-center">
+              <Briefcase size={14} className="mr-1 inline" /> Company Act 2013 Compliance
+            </div>
+            <h3 className="text-2xl font-bold font-baloo text-deep">Corporate CSR Partnerships</h3>
+            <p className="text-xs text-gray-600 leading-relaxed">
+              Athiaa welfare operates 100% compliant reporting indices under Schedule VII guidelines. Coordinate CSR donations towards building automated diagnostic mobile vans or funding district immunization buffers.
+            </p>
+            <button 
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                alert("Corporate CSR Proposal Dossier compiled successfully! Download triggered.");
+              }}
+              className="text-xs font-bold text-primary flex items-center space-x-1 hover:underline cursor-pointer bg-transparent border-none p-0"
+            >
+              <FileText size={14} />
+              <span>Download CSR Proposal.pdf</span>
+            </button>
           </div>
-          <h3 className="text-2xl font-bold font-baloo text-deep">Corporate CSR Partnerships</h3>
-          <p className="text-xs text-gray-600 leading-relaxed">
-            Athiaa welfare operates 100% compliant reporting indices under Schedule VII guidelines. Coordinate CSR donations towards building automated diagnostic mobile vans or funding district immunization buffers.
-          </p>
-          <button 
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              triggerAppletActionLoader("Generating CSR dossier...", "Aggregating audit transparency metrics PDF...", () => {
-                alert("Corporate CSR Proposal Dossier compiled successfully! Simulated download triggered.");
-              });
-            }}
-            className="text-xs font-bold text-primary flex items-center space-x-1 hover:underline cursor-pointer bg-transparent border-none p-0"
-          >
-            <FileText size={14} />
-            <span>Download CSR Proposal.pdf</span>
-          </button>
-        </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-gray-150 md:w-1/2 w-full space-y-3 font-sans">
-          <p className="text-xs font-bold uppercase text-gray-500 tracking-wider">CSR INQUIRY INVOICER</p>
-          <div className="space-y-2 text-xs">
+          <div className="bg-white p-5 rounded-2xl border border-gray-150 md:w-1/2 w-full space-y-3 font-sans">
+            <p className="text-xs font-bold uppercase text-gray-500 tracking-wider">CSR INQUIRY INVOICER</p>
+            <div className="space-y-2 text-xs">
             <input 
               type="text" 
               placeholder="Enterprise Name (e.g., Tata Group)" 
@@ -673,6 +681,7 @@ export default function DonatePage() {
           </div>
         </div>
       </section>
+    </Reveal>
 
       {/* RAZORPAY COMPLIANT MODAL CHECKOUT DIALOG */}
       {showCheckout && (

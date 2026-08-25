@@ -24,6 +24,7 @@ import { useAppContext } from '@/components/providers/AppContext';
 import { useDogs } from '@/lib/hooks/useDogs';
 import { useAdoptionMutations } from '@/lib/hooks/useAdoptions';
 import InteractiveTiltCard from '@/components/ui/InteractiveTiltCard';
+import Reveal from '@/components/ui/Reveal';
 
 const LOCAL_INITIAL_DOGS = [
   {
@@ -1146,81 +1147,80 @@ export default function AdoptPage() {
           {/* Masonry cards listing */}
           {filteredDogs.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 text-left font-sans">
-              {filteredDogs.map((dog: any) => (
-                <div 
-                  key={dog.id}
-                  onClick={() => {
-                    triggerAppletActionLoader(`Paws profile for ${dog.name}`, "Syncing vaccine documents & story diary...", () => {
+              {filteredDogs.map((dog: any, idx: number) => (
+                <Reveal key={dog.id} direction="up" staggerIndex={idx} className="h-full">
+                  <div 
+                    onClick={() => {
                       setSelectedDog(dog);
-                    });
-                  }}
-                  className="bg-white rounded-3xl overflow-hidden border border-orange-50 shadow-warm hover:shadow-warm-lg hover:-translate-y-1.5 transition duration-300 flex flex-col justify-between group cursor-pointer"
-                >
-                  <div className="relative aspect-square overflow-hidden bg-slate-100">
-                    <img 
-                      src={dog.image} 
-                      alt={dog.name} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                      referrerPolicy="no-referrer"
-                    />
-                    
-                    <button 
-                      onClick={(e) => handleShare(dog, e)}
-                      className="absolute top-3 left-3 bg-white/95 backdrop-blur border border-orange-50/50 p-2 rounded-xl text-gray-500 hover:text-primary shadow-sm cursor-pointer"
-                    >
-                      <Share2 size={13} />
-                    </button>
-
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSaveDogToFavorites(dog.id);
-                      }}
-                      className="absolute top-3 right-3 bg-white/95 backdrop-blur border border-orange-50/50 p-2 rounded-xl shadow-sm transition hover:scale-110 cursor-pointer"
-                      style={{ color: isFavorite(dog.id) ? '#E8572A' : '#9CA3AF' }}
-                    >
-                      <Heart size={13} fill={isFavorite(dog.id) ? 'currentColor' : 'none'} />
-                    </button>
-
-                    <div className="absolute bottom-3 left-3 bg-deep/75 backdrop-blur text-white font-mono text-[9px] px-2 py-0.5 rounded flex items-center space-x-1 shadow-sm">
-                      <MapPin size={10} className="text-secondary" />
-                      <span>{dog.city}</span>
-                    </div>
-
-                    {dog.specialNeeds && (
-                      <span className="absolute bottom-3 right-3 bg-yellow-400 text-deep font-bold text-[8px] px-2 py-0.5 rounded-full shadow-sm font-sans">
-                        SP. NEEDS
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
-                    <div>
-                      <div className="flex justify-between items-baseline">
-                        <h3 className="font-baloo font-bold text-xl text-deep leading-none">{dog.name}</h3>
-                        <span className="text-[10px] text-[#2E8B57] bg-green-50 font-bold px-1.5 py-0.5 rounded font-sans">Active</span>
-                      </div>
-                      <p className="text-[10px] text-gray-400 font-mono italic mt-0.5">{dog.breed} • {dog.species || 'Dog'} • {dog.age}</p>
+                    }}
+                    className="bg-white rounded-3xl overflow-hidden border border-orange-50 shadow-warm hover:shadow-warm-lg hover:-translate-y-1.5 transition duration-300 flex flex-col justify-between group cursor-pointer h-full"
+                  >
+                    <div className="relative aspect-square overflow-hidden bg-slate-100">
+                      <img 
+                        src={dog.image} 
+                        alt={dog.name} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                        referrerPolicy="no-referrer"
+                      />
                       
-                      <div className="flex flex-wrap gap-1 mt-2.5">
-                        {dog.personalityTags.slice(0, 2).map((tag, i) => (
-                          <span key={i} className="text-[9px] font-bold bg-[#FFF9F4] text-primary border border-orange-100/50 px-2 py-0.5 rounded-full">
-                            {tag}
-                          </span>
-                        ))}
+                      <button 
+                        onClick={(e) => handleShare(dog, e)}
+                        className="absolute top-3 left-3 bg-white/95 backdrop-blur border border-orange-50/50 p-2 rounded-xl text-gray-500 hover:text-primary shadow-sm cursor-pointer"
+                      >
+                        <Share2 size={13} />
+                      </button>
+
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSaveDogToFavorites(dog.id);
+                        }}
+                        className="absolute top-3 right-3 bg-white/95 backdrop-blur border border-orange-50/50 p-2 rounded-xl shadow-sm transition hover:scale-110 cursor-pointer"
+                        style={{ color: isFavorite(dog.id) ? '#E8572A' : '#9CA3AF' }}
+                      >
+                        <Heart size={13} fill={isFavorite(dog.id) ? 'currentColor' : 'none'} />
+                      </button>
+
+                      <div className="absolute bottom-3 left-3 bg-deep/75 backdrop-blur text-white font-mono text-[9px] px-2 py-0.5 rounded flex items-center space-x-1 shadow-sm">
+                        <MapPin size={10} className="text-secondary" />
+                        <span>{dog.city}</span>
+                      </div>
+
+                      {dog.specialNeeds && (
+                        <span className="absolute bottom-3 right-3 bg-yellow-400 text-deep font-bold text-[8px] px-2 py-0.5 rounded-full shadow-sm font-sans">
+                          SP. NEEDS
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                      <div>
+                        <div className="flex justify-between items-baseline">
+                          <h3 className="font-baloo font-bold text-xl text-deep leading-none">{dog.name}</h3>
+                          <span className="text-[10px] text-[#2E8B57] bg-green-50 font-bold px-1.5 py-0.5 rounded font-sans">Active</span>
+                        </div>
+                        <p className="text-[10px] text-gray-400 font-mono italic mt-0.5">{dog.breed} • {dog.species || 'Dog'} • {dog.age}</p>
+                        
+                        <div className="flex flex-wrap gap-1 mt-2.5">
+                          {dog.personalityTags.slice(0, 2).map((tag: string, i: number) => (
+                            <span key={i} className="text-[9px] font-bold bg-[#FFF9F4] text-primary border border-orange-100/50 px-2 py-0.5 rounded-full">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <p className="text-gray-500 text-[11px] leading-relaxed line-clamp-2">
+                        {dog.lifeStory}
+                      </p>
+
+                      <div className="pt-3 border-t border-slate-100 flex justify-between items-center text-[10px] font-semibold text-primary">
+                        <span>Introduce Me</span>
+                        <ChevronRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
                       </div>
                     </div>
-
-                    <p className="text-gray-500 text-[11px] leading-relaxed line-clamp-2">
-                      {dog.lifeStory}
-                    </p>
-
-                    <div className="pt-3 border-t border-slate-100 flex justify-between items-center text-[10px] font-semibold text-primary">
-                      <span>Introduce Me</span>
-                      <ChevronRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
-                    </div>
                   </div>
-                </div>
+                </Reveal>
               ))}
             </div>
           ) : (

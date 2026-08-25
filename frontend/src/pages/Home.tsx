@@ -33,10 +33,10 @@ import InteractiveTiltCard from '@/components/ui/InteractiveTiltCard';
 import { useAppContext } from '@/components/providers/AppContext';
 import { useDogs } from '@/lib/hooks/useDogs';
 import { useCampaigns } from '@/lib/hooks/useCampaigns';
-import { useEvents } from '@/lib/hooks/useEvents';
-import { useSuccessStories } from '@/lib/hooks/useSuccessStories';
 import DelhiMap from '@/src/components/DelhiMap';
 import { useRescueReports } from '@/lib/hooks/useRescueReports';
+import { useSuccessStories } from '@/lib/hooks/useSuccessStories';
+import Reveal from '@/components/ui/Reveal';
 
 const PARTNERS_LOGOS = [
   { name: 'AWBI Recognised', label: 'Animal Welfare Board of India' },
@@ -397,51 +397,52 @@ export default function HomePage() {
 
         {/* --- "CURRENTLY NEEDING HELP" URGENT STRIP --- */}
         <div className="max-w-7xl mx-auto w-full pt-16 pb-4">
-          <div className="flex items-center space-x-2 text-primary font-semibold mb-4 px-2">
-            <AlertCircle size={20} className="animate-pulse" />
-            <span className="uppercase text-sm tracking-widest font-mono">{t('urgentCare.badge')}</span>
-          </div>
+          <Reveal direction="up">
+            <div className="flex items-center space-x-2 text-primary font-semibold mb-4 px-2">
+              <AlertCircle size={20} className="animate-pulse" />
+              <span className="uppercase text-sm tracking-widest font-mono">{t('urgentCare.badge')}</span>
+            </div>
+          </Reveal>
           
           <div className="flex space-x-4 overflow-x-auto pb-4 px-2 no-scrollbar scroll-smooth">
-            {dogsList.slice(0, 3).map((dog) => (
-              <div 
-                key={dog.id} 
-                onClick={() => {
-                  setSelectedDogForProfile(dog);
-                  triggerAppletActionLoader(`Viewing ${dog.name}'s bio...`, 'Connecting medical records...', () => navigate('/adopt'));
-                }}
-                className="flex-shrink-0 w-80 bg-white border border-orange-50 rounded-2xl p-3 flex space-x-4 shadow-warm-sm hover:shadow-warm cursor-pointer hover:-translate-y-1 transition duration-300"
-              >
-                <img 
-                  src={dog.image} 
-                  alt={dog.name} 
-                  className="w-20 h-20 rounded-xl object-cover shrink-0"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="flex-1 text-left flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full">{t('urgentCare.criticalStatus')}</span>
-                      <span className="text-xs text-gray-500 font-mono flex items-center"><MapPin size={10} className="mr-0.5" />{dog.city}</span>
+            {dogsList.slice(0, 3).map((dog, idx) => (
+              <Reveal key={dog.id} direction="up" staggerIndex={idx} className="flex-shrink-0">
+                <div 
+                  onClick={() => {
+                    setSelectedDogForProfile(dog);
+                    navigate('/adopt');
+                  }}
+                  className="w-80 bg-white border border-orange-50 rounded-2xl p-3 flex space-x-4 shadow-warm-sm hover:shadow-warm cursor-pointer hover:-translate-y-1 transition duration-300"
+                >
+                  <img 
+                    src={dog.image} 
+                    alt={dog.name} 
+                    className="w-20 h-20 rounded-xl object-cover shrink-0"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="flex-1 text-left flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full">{t('urgentCare.criticalStatus')}</span>
+                        <span className="text-xs text-gray-500 font-mono flex items-center"><MapPin size={10} className="mr-0.5" />{dog.city}</span>
+                      </div>
+                      <h4 className="text-lg font-bold text-deep mt-1 font-baloo leading-tight">{dog.name}</h4>
+                      <p className="text-xs text-gray-600 line-clamp-1">{dog.rescueStory}</p>
                     </div>
-                    {/* TODO: dynamic content — needs bilingual DB columns if translation required */}
-                    <h4 className="text-lg font-bold text-deep mt-1 font-baloo leading-tight">{dog.name}</h4>
-                    <p className="text-xs text-gray-600 line-clamp-1">{dog.rescueStory}</p>
+                    <span className="text-xs font-semibold text-primary flex items-center space-x-1 hover:underline">
+                      <span>{t('urgentCare.helpSave')} {dog.name}</span>
+                      <ArrowRight size={12} />
+                    </span>
                   </div>
-                  <span className="text-xs font-semibold text-primary flex items-center space-x-1 hover:underline">
-                    {/* TODO: dynamic content — needs bilingual DB columns if translation required */}
-                    <span>{t('urgentCare.helpSave')} {dog.name}</span>
-                    <ArrowRight size={12} />
-                  </span>
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
       </section>
 
       {/* 2. LIVE STATS BAR */}
-      <section className="max-w-7xl mx-auto px-4">
+      <Reveal direction="up" className="max-w-7xl mx-auto px-4">
         <div className="bg-deep rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
           <div className="absolute inset-0 bg-radial-gradient from-transparent to-black/40 pointer-events-none" />
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center relative z-10 font-sans">
@@ -463,149 +464,156 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-      </section>
+      </Reveal>
 
       {/* 3. MISSION SECTION */}
       <section className="max-w-7xl mx-auto px-4 space-y-10 text-center py-6">
-        <div className="space-y-3">
+        <Reveal direction="up" className="space-y-3">
           <span className="text-primary font-bold tracking-widest uppercase text-xs md:text-sm font-mono block">{t('home.howItWorksBadge')}</span>
           <h2 className="text-3xl md:text-5xl font-bold font-baloo text-deep">{t('home.howItWorksTitle')}</h2>
           <p className="text-gray-600 max-w-xl mx-auto font-sans text-sm md:text-base leading-relaxed pt-1">
             {t('home.howItWorksSubtitle')}
           </p>
-        </div>
+        </Reveal>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-white p-8 rounded-3xl border border-orange-50 shadow-warm hover:shadow-warm-lg hover:-translate-y-2 transition duration-300 text-left flex flex-col justify-between">
-            <div className="space-y-4">
-              <div className="w-14 h-14 rounded-2xl bg-orange-100 flex items-center justify-center text-primary text-2xl font-bold shadow-sm">
-                <ShieldAlert className="w-6 h-6 text-primary" />
+          <Reveal direction="up" staggerIndex={0}>
+            <div className="bg-white p-8 rounded-3xl border border-orange-50 shadow-warm hover:shadow-warm-lg hover:-translate-y-2 transition duration-300 text-left flex flex-col justify-between h-full">
+              <div className="space-y-4">
+                <div className="w-14 h-14 rounded-2xl bg-orange-100 flex items-center justify-center text-primary text-2xl font-bold shadow-sm">
+                  <ShieldAlert className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="text-2xl font-bold font-baloo text-deep">{t('home.step1Title')}</h3>
+                <p className="text-gray-600 text-sm font-sans line-clamp-4">
+                  {t('home.step1Desc')}
+                </p>
               </div>
-              <h3 className="text-2xl font-bold font-baloo text-deep">{t('home.step1Title')}</h3>
-              <p className="text-gray-600 text-sm font-sans line-clamp-4">
-                {t('home.step1Desc')}
-              </p>
+              <button onClick={() => navigate('/rescue')} className="flex items-center space-x-2 text-primary font-bold mt-6 hover:underline group cursor-pointer">
+                <span>{t('nav.rescue')}</span>
+                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              </button>
             </div>
-            <button onClick={() => triggerAppletActionLoader("Opening Rescue Dispatch...", "Locating nearest responder nodes...", () => navigate('/rescue'))} className="flex items-center space-x-2 text-primary font-bold mt-6 hover:underline group cursor-pointer">
-              <span>{t('nav.rescue')}</span>
-              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
+          </Reveal>
 
-          <div className="bg-white p-8 rounded-3xl border border-yellow-50 shadow-warm hover:shadow-warm-lg hover:-translate-y-2 transition duration-300 text-left flex flex-col justify-between">
-            <div className="space-y-4">
-              <div className="w-14 h-14 rounded-2xl bg-yellow-100 flex items-center justify-center text-[#F4C430] text-2xl font-bold shadow-sm">
-                <Activity className="w-6 h-6 text-[#F4C430]" />
+          <Reveal direction="up" staggerIndex={1}>
+            <div className="bg-white p-8 rounded-3xl border border-yellow-50 shadow-warm hover:shadow-warm-lg hover:-translate-y-2 transition duration-300 text-left flex flex-col justify-between h-full">
+              <div className="space-y-4">
+                <div className="w-14 h-14 rounded-2xl bg-yellow-100 flex items-center justify-center text-[#F4C430] text-2xl font-bold shadow-sm">
+                  <Activity className="w-6 h-6 text-[#F4C430]" />
+                </div>
+                <h3 className="text-2xl font-bold font-baloo text-deep">{t('home.step2Title')}</h3>
+                <p className="text-gray-600 text-sm font-sans line-clamp-4">
+                  {t('home.step2Desc')}
+                </p>
               </div>
-              <h3 className="text-2xl font-bold font-baloo text-deep">{t('home.step2Title')}</h3>
-              <p className="text-gray-600 text-sm font-sans line-clamp-4">
-                {t('home.step2Desc')}
-              </p>
+              <button onClick={() => navigate('/contact')} className="flex items-center space-x-2 text-primary font-bold mt-6 hover:underline group cursor-pointer">
+                <span>{t('nav.contact')}</span>
+                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              </button>
             </div>
-            <button onClick={() => triggerAppletActionLoader("Locating Shelters...", "Compiling contact numbers...", () => navigate('/contact'))} className="flex items-center space-x-2 text-primary font-bold mt-6 hover:underline group cursor-pointer">
-              <span>{t('nav.contact')}</span>
-              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
+          </Reveal>
 
-          <div className="bg-white p-8 rounded-3xl border border-green-50 shadow-warm hover:shadow-warm-lg hover:-translate-y-2 transition duration-300 text-left flex flex-col justify-between">
-            <div className="space-y-4">
-              <div className="w-14 h-14 rounded-2xl bg-green-100 flex items-center justify-center text-accent text-2xl font-bold shadow-sm">
-                <HomeIcon className="w-6 h-6 text-accent" />
+          <Reveal direction="up" staggerIndex={2}>
+            <div className="bg-white p-8 rounded-3xl border border-green-50 shadow-warm hover:shadow-warm-lg hover:-translate-y-2 transition duration-300 text-left flex flex-col justify-between h-full">
+              <div className="space-y-4">
+                <div className="w-14 h-14 rounded-2xl bg-green-100 flex items-center justify-center text-accent text-2xl font-bold shadow-sm">
+                  <HomeIcon className="w-6 h-6 text-accent" />
+                </div>
+                <h3 className="text-2xl font-bold font-baloo text-deep">{t('home.step3Title')}</h3>
+                <p className="text-gray-600 text-sm font-sans line-clamp-4">
+                  {t('home.step3Desc')}
+                </p>
               </div>
-              <h3 className="text-2xl font-bold font-baloo text-deep">{t('home.step3Title')}</h3>
-              <p className="text-gray-600 text-sm font-sans line-clamp-4">
-                {t('home.step3Desc')}
-              </p>
+              <button onClick={() => navigate('/adopt')} className="flex items-center space-x-2 text-primary font-bold mt-6 hover:underline group cursor-pointer">
+                <span>{t('home.viewAllAnimals')}</span>
+                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              </button>
             </div>
-            <button onClick={() => triggerAppletActionLoader("Scanning Companions...", "Accessing legal lists...", () => navigate('/adopt'))} className="flex items-center space-x-2 text-primary font-bold mt-6 hover:underline group cursor-pointer">
-              <span>{t('home.viewAllAnimals')}</span>
-              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
+          </Reveal>
         </div>
       </section>
 
       {/* 4. FEATURED DOGS SECTION */}
       <section className="max-w-7xl mx-auto px-4 space-y-10">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+        <Reveal direction="up" className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
           <div className="space-y-2 text-left">
             <span className="text-primary font-bold tracking-widest uppercase text-sm font-mono">Sweet Hearts Seeking Families</span>
             <h2 className="text-3xl md:text-5xl font-bold font-baloo text-deep">Featured Rescues Ready to Meet You</h2>
           </div>
           <button 
             id="view-all-dogs-btn"
-            onClick={() => triggerAppletActionLoader("Scanning all companion logs...", "Assembling filters...", () => navigate('/adopt'))} 
+            onClick={() => navigate('/adopt')} 
             className="group inline-flex items-center space-x-2 text-primary-hover font-bold border-b-2 border-primary/20 pb-1 cursor-pointer"
           >
             <span>Browse All {dogsList.length} Animals</span>
             <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
           </button>
-        </div>
+        </Reveal>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {dogsList.slice(0, 3).map((dog, idx) => {
             const statusLabels = ["Urgent Care", "New Arrival", "Almost Adopted"];
             return (
-              <InteractiveTiltCard 
-                key={dog.id}
-                onClick={() => {
-                  setSelectedDogForProfile(dog);
-                  triggerAppletActionLoader(`Loading ${dog.name}'s bio...`, 'Connecting records...', () => navigate('/adopt'));
-                }}
-                className="bg-white rounded-3xl overflow-hidden border border-orange-50 shadow-warm text-left cursor-pointer h-full"
-              >
-                <div className="relative aspect-[4/3] overflow-hidden">
-                  <img 
-                    src={dog.image} 
-                    alt={dog.name} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-primary border border-orange-100 flex items-center space-x-1 shadow-sm">
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block"></span>
-                    <span>{statusLabels[idx]}</span>
+              <Reveal key={dog.id} direction="up" staggerIndex={idx} className="h-full">
+                <InteractiveTiltCard 
+                  onClick={() => {
+                    setSelectedDogForProfile(dog);
+                    navigate('/adopt');
+                  }}
+                  className="bg-white rounded-3xl overflow-hidden border border-orange-50 shadow-warm text-left cursor-pointer h-full"
+                >
+                  <div className="relative aspect-[4/3] overflow-hidden">
+                    <img 
+                      src={dog.image} 
+                      alt={dog.name} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-primary border border-orange-100 flex items-center space-x-1 shadow-sm">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block"></span>
+                      <span>{statusLabels[idx]}</span>
+                    </div>
+                    <div className="absolute bottom-4 right-4 bg-deep/80 backdrop-blur text-white px-3 py-1 rounded-lg text-xs font-mono flex items-center space-x-1">
+                      <MapPin size={12} className="text-orange-400" />
+                      <span>{dog.city}</span>
+                    </div>
                   </div>
-                  <div className="absolute bottom-4 right-4 bg-deep/80 backdrop-blur text-white px-3 py-1 rounded-lg text-xs font-mono flex items-center space-x-1">
-                    <MapPin size={12} className="text-orange-400" />
-                    <span>{dog.city}</span>
-                  </div>
-                </div>
 
-                <div className="p-6 space-y-4">
-                  <div className="flex justify-between items-baseline">
-                    <h3 className="text-2xl font-bold font-baloo text-deep">{dog.name}</h3>
-                    <span className="text-xs text-gray-500 font-mono italic">{dog.breed} • {dog.species || 'Dog'} • {dog.age}</span>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-1.5">
-                    {dog.personalityTags.map((tag, i) => (
-                      <span key={i} className="text-[11px] font-medium bg-orange-50 text-primary border border-orange-100/60 px-2.5 py-0.5 rounded-full">
-                        {tag}
+                  <div className="p-6 space-y-4">
+                    <div className="flex justify-between items-baseline">
+                      <h3 className="text-2xl font-bold font-baloo text-deep">{dog.name}</h3>
+                      <span className="text-xs text-gray-500 font-mono italic">{dog.breed} • {dog.species || 'Dog'} • {dog.age}</span>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-1.5">
+                      {dog.personalityTags.map((tag, i) => (
+                        <span key={i} className="text-[11px] font-medium bg-orange-50 text-primary border border-orange-100/60 px-2.5 py-0.5 rounded-full">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+
+                    <p className="text-gray-600 text-xs leading-relaxed line-clamp-2">
+                      {dog.lifeStory}
+                    </p>
+
+                    <div className="pt-4 border-t border-gray-100 flex items-center justify-between text-xs font-semibold text-primary">
+                      <span className="flex items-center space-x-1">
+                        <span>View Bio & Radar Profile</span>
+                        <ArrowRight size={14} />
                       </span>
-                    ))}
+                      <span className="text-gray-400 font-mono text-[11px]">{dog.weight}</span>
+                    </div>
                   </div>
-
-                  <p className="text-gray-600 text-xs leading-relaxed line-clamp-2">
-                    {dog.lifeStory}
-                  </p>
-
-                  <div className="pt-4 border-t border-gray-100 flex items-center justify-between text-xs font-semibold text-primary">
-                    <span className="flex items-center space-x-1">
-                      <span>View Bio & Radar Profile</span>
-                      <ArrowRight size={14} />
-                    </span>
-                    <span className="text-gray-400 font-mono text-[11px]">{dog.weight}</span>
-                  </div>
-                </div>
-              </InteractiveTiltCard>
+                </InteractiveTiltCard>
+              </Reveal>
             );
           })}
         </div>
       </section>
 
       {/* 5. ACTIVE CAMPAIGN PROGRESS SECTION */}
-      <section className="max-w-7xl mx-auto px-4">
+      <Reveal direction="up" className="max-w-7xl mx-auto px-4">
         <div className="bg-gradient-to-br from-[#FFF9F4] to-[#FFF1E4] border-2 border-primary/10 rounded-3xl p-8 md:p-12 text-left shadow-warm flex flex-col lg:flex-row gap-12 items-center">
           <div className="lg:w-1/2 space-y-6">
             <div className="inline-flex items-center space-x-2 bg-yellow-100 border border-yellow-200 text-[#DFAC00] px-3.5 py-1.5 rounded-full text-xs font-bold">
@@ -643,13 +651,13 @@ export default function HomePage() {
 
             <div className="pt-4 flex flex-wrap gap-4">
               <button 
-                onClick={() => triggerAppletActionLoader("Connecting gateway...", "Loading parameters...", () => navigate('/donate'))}
+                onClick={() => navigate('/donate')}
                 className="bg-primary hover:bg-primary-hover text-white px-8 py-3.5 rounded-xl font-bold hover:-translate-y-0.5 transition duration-200 shadow-warm cursor-pointer"
               >
                 Donate to This Campaign ₹
               </button>
               <button 
-                onClick={() => triggerAppletActionLoader("Dispatching form...", "Analyzing GPS nodes...", () => navigate('/rescue'))}
+                onClick={() => navigate('/rescue')}
                 className="bg-white hover:bg-orange-50 text-deep border border-gray-250 px-6 py-3.5 rounded-xl font-semibold transition cursor-pointer"
               >
                 Submit Injury Report
@@ -670,10 +678,10 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-      </section>
+      </Reveal>
 
       {/* 6. SUCCESS STORY CAROUSEL WITH BEFORE/AFTER */}
-      <section className="max-w-7xl mx-auto px-4 space-y-10 text-center">
+      <Reveal direction="up" className="max-w-7xl mx-auto px-4 space-y-10 text-center">
         <div className="space-y-2">
           <span className="text-primary font-bold tracking-widest uppercase text-sm font-mono">Miracle Healings</span>
           <h2 className="text-3xl md:text-5xl font-bold font-baloo text-deep">Our Proud Before & After Heals</h2>
@@ -748,10 +756,10 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </section>
+      </Reveal>
 
       {/* 7. DELHI IMPACT MAP */}
-      <section className="max-w-7xl mx-auto px-4 space-y-10 text-center">
+      <Reveal direction="up" className="max-w-7xl mx-auto px-4 space-y-10 text-center">
         <div className="space-y-2">
           <span className="text-primary font-bold tracking-widest uppercase text-sm font-mono">Our Footprints Map</span>
           <h2 className="text-3xl md:text-5xl font-bold font-baloo text-deep">Athiaa Delhi Rescue Footprints</h2>
@@ -793,7 +801,7 @@ export default function HomePage() {
 
               <div className="pt-2">
                 <button 
-                  onClick={() => triggerAppletActionLoader("Connecting coordinators...", "Syncing local chat indices...", () => navigate('/volunteer'))} 
+                  onClick={() => navigate('/volunteer')} 
                   className="w-full text-center bg-primary hover:bg-primary-hover text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center space-x-2 cursor-pointer"
                 >
                   <span>Join Delhi Volunteers Group</span>
@@ -810,14 +818,14 @@ export default function HomePage() {
             />
           </div>
         </div>
-      </section>
+      </Reveal>
 
       {/* 8. HOW IT WORKS SECTION (TIMELINE) */}
       <section className="max-w-7xl mx-auto px-4 space-y-12">
-        <div className="space-y-2 text-center">
+        <Reveal direction="up" className="space-y-2 text-center">
           <span className="text-primary font-bold tracking-widest uppercase text-sm font-mono font-bold">5-Step Life Cycle</span>
           <h2 className="text-3xl md:text-5xl font-bold font-baloo text-deep">How Athiaa Saves a Life</h2>
-        </div>
+        </Reveal>
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6 text-left">
           {[
@@ -829,31 +837,32 @@ export default function HomePage() {
           ].map((step, i) => {
             const IconComp = step.icon;
             return (
-              <div 
-                key={i} 
-                onClick={() => triggerAppletActionLoader(`Loading ${step.tag} details...`, 'Preparing page...', () => navigate(step.link))}
-                className="bg-white p-6 rounded-3xl border border-orange-50 shadow-warm relative overflow-hidden flex flex-col justify-between cursor-pointer hover:shadow-lg transition duration-200"
-              >
-                <div className="absolute top-0 right-0 w-16 h-16 bg-cream/50 rounded-bl-full flex items-center justify-end pr-3 pt-3 text-sm font-bold text-orange-200 font-mono">
-                  0{i + 1}
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="w-12 h-12 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center text-primary">
-                    <IconComp size={22} />
+              <Reveal key={i} direction="up" staggerIndex={i}>
+                <div 
+                  onClick={() => navigate(step.link)}
+                  className="bg-white p-6 rounded-3xl border border-orange-50 shadow-warm relative overflow-hidden flex flex-col justify-between cursor-pointer hover:shadow-lg transition duration-200 h-full"
+                >
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-cream/50 rounded-bl-full flex items-center justify-end pr-3 pt-3 text-sm font-bold text-orange-200 font-mono">
+                    0{i + 1}
                   </div>
-                  <h4 className="text-lg font-bold font-baloo text-deep tracking-wide">{step.tag}</h4>
-                  <p className="text-gray-600 text-xs leading-relaxed font-sans mt-1">
-                    {step.desc}
-                  </p>
-                </div>
+                  
+                  <div className="space-y-4">
+                    <div className="w-12 h-12 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center text-primary">
+                      <IconComp size={22} />
+                    </div>
+                    <h4 className="text-lg font-bold font-baloo text-deep tracking-wide">{step.tag}</h4>
+                    <p className="text-gray-600 text-xs leading-relaxed font-sans mt-1">
+                      {step.desc}
+                    </p>
+                  </div>
 
-                {i < 4 && (
-                  <div className="hidden md:block absolute right-[-10px] top-[40%] translate-y-1/2 text-orange-200">
-                    <ArrowRight size={18} />
-                  </div>
-                )}
-              </div>
+                  {i < 4 && (
+                    <div className="hidden md:block absolute right-[-10px] top-[40%] translate-y-1/2 text-orange-200">
+                      <ArrowRight size={18} />
+                    </div>
+                  )}
+                </div>
+              </Reveal>
             );
           })}
         </div>
@@ -880,7 +889,7 @@ export default function HomePage() {
       </section>
 
       {/* 10. WHATSAPP UPDATES COMMUNITY SIGNUP */}
-      <section className="max-w-3xl mx-auto px-4 z-10 relative">
+      <Reveal direction="up" className="max-w-3xl mx-auto px-4 z-10 relative">
         <div className="bg-gradient-to-br from-deep via-slate-900 to-black rounded-3xl p-8 text-center text-white shadow-xl space-y-6 relative border border-white/5 font-sans">
           <div className="absolute top-4 right-4 text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full text-[10px] font-mono tracking-wider font-semibold flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -959,7 +968,7 @@ export default function HomePage() {
             </form>
           )}
         </div>
-      </section>
+      </Reveal>
 
       {/* 11. FOOTER REGISTERED LEGAL INDICATIONS --- NOTE: LayoutShell has its own footer! */}
     </div>
