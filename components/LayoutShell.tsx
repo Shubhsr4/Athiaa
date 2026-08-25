@@ -97,12 +97,6 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
           {/* Logo Brand Silhouette INDog with heart bindi */}
           <Link 
             to="/"
-            onClick={(e) => {
-              if (pathname !== '/') {
-                e.preventDefault();
-                triggerAppletActionLoader("Navigating Home...", "Fostering companion lives...", () => navigate('/'));
-              }
-            }}
             className="flex items-center space-x-3 cursor-pointer select-none group"
           >
             {/* Minimalist INDog shape custom SVG design illustration */}
@@ -130,12 +124,6 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
               <Link 
                 key={item.key}
                 to={item.path}
-                onClick={(e) => {
-                  if (pathname !== item.path) {
-                    e.preventDefault();
-                    triggerAppletActionLoader(`Loading ${item.txt}...`, 'Connecting server registers...', () => navigate(item.path));
-                  }
-                }}
                 className={`px-3 py-2 rounded-xl transition ${pathname === item.path ? 'bg-orange-50 text-primary font-bold' : 'hover:bg-cream'}`}
               >
                 {item.txt}
@@ -154,12 +142,6 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
                   <Link 
                     key={item.key}
                     to={item.path}
-                    onClick={(e) => {
-                      if (pathname !== item.path) {
-                        e.preventDefault();
-                        triggerAppletActionLoader(`Loading ${item.txt}...`, 'Optimizing responsive views...', () => navigate(item.path));
-                      }
-                    }}
                     className={`w-full text-left px-3 py-2 rounded-xl hover:bg-cream transition block ${pathname === item.path ? 'bg-orange-50 text-primary' : ''}`}
                   >
                     {item.txt}
@@ -177,7 +159,6 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
               onClick={() => {
                 const nextLang = i18n.language?.toLowerCase().startsWith('hi') ? 'en' : 'hi';
                 i18n.changeLanguage(nextLang);
-                triggerAppletActionLoader("Changing Interface Language...", nextLang === 'hi' ? "हिंदी अनुवाद अनुकूलन लोड हो रहा है..." : "Syncing international typography metrics...");
               }}
               className="p-2.5 bg-cream/80 hover:bg-orange-100 border border-orange-100 hover:border-primary/40 rounded-xl text-xs font-extrabold flex items-center space-x-1.5 cursor-pointer transition-all duration-200 shadow-xs hover:shadow-sm select-none"
               title="Change Language"
@@ -191,12 +172,6 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
               <div className="flex items-center space-x-2">
                 <Link 
                   to="/dashboard"
-                  onClick={(e) => {
-                    if (pathname !== '/dashboard') {
-                      e.preventDefault();
-                      triggerAppletActionLoader("Accessing dashboard...", "Validating authorization...", () => navigate('/dashboard'));
-                    }
-                  }}
                   className="flex items-center space-x-1.5 cursor-pointer bg-cream p-1.5 rounded-xl border border-orange-50 font-sans text-xs select-none hover:shadow-xs transition"
                 >
                   <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center font-bold text-white text-[10px]">
@@ -214,12 +189,6 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
                 {['admin', 'super_admin'].includes(profile.role) && (
                   <Link
                     to="/admin"
-                    onClick={(e) => {
-                      if (pathname !== '/admin') {
-                        e.preventDefault();
-                        triggerAppletActionLoader("Loading Admin Panel...", "Assembling system health models...", () => navigate('/admin'));
-                      }
-                    }}
                     className="bg-orange-100 hover:bg-orange-200 text-primary text-[10px] font-bold px-2 py-1.5 rounded-lg border border-orange-250 font-sans"
                   >
                     Admin
@@ -254,13 +223,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
               <Link 
                 key={item.key}
                 to={item.path}
-                onClick={(e) => {
-                  if (pathname !== item.path) {
-                    e.preventDefault();
-                    setMenuOpen(false);
-                    triggerAppletActionLoader(`Loading ${item.txt}...`, 'Connecting coordinates...', () => navigate(item.path));
-                  }
-                }}
+                onClick={() => setMenuOpen(false)}
                 className={`w-full text-left px-4 py-2.5 rounded-xl hover:bg-cream transition block ${pathname === item.path ? 'bg-orange-50 text-primary' : ''}`}
               >
                 {item.txt}
@@ -372,13 +335,13 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
         
         {/* Sticky Direct Donate Button */}
         {pathname !== '/donate' && (
-          <button 
-            onClick={() => triggerAppletActionLoader("Loading Saffron Healing Tier...", "Summoning tax certificate modules...", () => navigate('/donate'))}
+          <Link 
+            to="/donate"
             className="flex items-center space-x-1.5 bg-[#E8572A] text-white hover:bg-[#D0491E] font-extrabold px-5 py-3 rounded-2xl shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5 text-xs select-none cursor-pointer"
           >
             <Heart size={14} className="fill-white animate-pulse" />
             <span>Donate Instantly</span>
-          </button>
+          </Link>
         )}
 
         {/* Floating WhatsApp desk helper */}
@@ -407,12 +370,6 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
             <Link 
               key={item.path}
               to={item.path}
-              onClick={(e) => {
-                if (pathname !== item.path) {
-                  e.preventDefault();
-                  triggerAppletActionLoader(`Loading ${item.label}...`, 'Mapping parameters...', () => navigate(item.path));
-                }
-              }}
               className={`flex flex-col items-center gap-1 py-1 px-3.5 rounded-xl transition-all ${pathname === item.path ? 'text-primary bg-orange-50 font-extrabold' : ''}`}
             >
               <IconComp size={16} />

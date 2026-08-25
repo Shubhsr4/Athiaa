@@ -50,25 +50,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [donationHistory, setDonationHistory] = useState<any[]>([]);
 
   const [loaderState, setLoaderState] = useState({
-    isVisible: true,
-    title: 'Nurturing Street Angels',
-    subtext: 'Booting Athiaa National Resource Registry...'
+    isVisible: false,
+    title: '',
+    subtext: ''
   });
 
-  // Auto Dismiss Initial Intro Loader after 1.8 seconds
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoaderState(prev => ({ ...prev, isVisible: false }));
-    }, 1800);
-    return () => clearTimeout(timer);
-  }, []);
-
   const triggerAppletActionLoader = (title: string, subtext: string, callback?: () => void) => {
-    setLoaderState({ isVisible: true, title, subtext });
-    setTimeout(() => {
-      setLoaderState(prev => ({ ...prev, isVisible: false }));
-      if (callback) callback();
-    }, 1650);
+    // Non-blocking action callback execution (instant navigation)
+    if (callback) {
+      callback();
+    }
   };
 
   const handleToggleFavorite = (dog: Dog) => {

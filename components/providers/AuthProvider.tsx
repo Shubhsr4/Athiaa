@@ -61,29 +61,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfileAndRoles = useCallback(async (userId: string) => {
     if (!supabase) return;
     try {
-      // 1. Fetch Profile
-      const { data: prof } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
-      if (prof) setProfile(prof as Profile);
+      // Parallel fetch profile and roles
+      const [{ data: prof }, { data: userRoleRecords }] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
+        supabase.from('user_roles').select('role').eq('user_id', userId)
+      ]);
 
-      // 2. Fetch User Roles joined with roles table name
-      const { data: userRoleRecords } = await supabase
-        .from('user_roles')
-        .select('roles(name)')
-        .eq('user_id', userId);
+      if (prof) setProfile(prof as Profile);
 
       if (userRoleRecords && userRoleRecords.length > 0) {
         const fetchedRoleNames = userRoleRecords
-          .map((ur: any) => ur.roles?.name?.toLowerCase())
+          .map((ur: any) => ur.role?.toLowerCase())
           .filter(Boolean);
-        setRoles(fetchedRoleNames);
+        setRoles(fetchedRoleNames.length > 0 ? fetchedRoleNames : ['donor']);
       } else {
-        // Fallback: check is_admin RPC or default to donor
-        const { data: isAdm } = await supabase.rpc('has_role', { check_user_id: userId, check_role: 'admin' });
-        if (isAdm) {
-          setRoles(['admin', 'donor']);
-        } else {
-          setRoles(['donor']);
-        }
+        setRoles(['donor']);
       }
     } catch (err) {
       console.error('Error loading user profile & roles:', err);
