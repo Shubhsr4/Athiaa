@@ -1,46 +1,20 @@
 {
-  "name": "react-example",
+  "name": "athiaa-monorepo",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port 3000 --host 0.0.0.0",
-    "build": "vite build",
-    "preview": "vite preview",
-    "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "dev": "npm run dev --prefix frontend",
+    "build": "npm run build --prefix frontend",
+    "preview": "npm run preview --prefix frontend",
+    "lint": "npm run lint --prefix frontend",
+    "install:all": "npm install && npm install --prefix frontend --legacy-peer-deps"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.106.2",
-    "@types/d3": "^7.4.3",
-    "d3": "^7.9.0",
-    "i18next": "^26.3.6",
-    "i18next-browser-languagedetector": "^8.2.1",
-    "leaflet": "^1.9.4",
-    "lucide-react": "^0.546.0",
-    "motion": "^12.23.24",
-    "razorpay": "^2.9.6",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-i18next": "^17.0.11",
-    "react-leaflet": "^4.2.1",
-    "react-router-dom": "^7.18.1",
-    "swr": "^2.4.1",
-    "zod": "^4.4.3"
+    "@supabase/supabase-js": "^2.106.2"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.3.0",
-    "@types/leaflet": "^1.9.21",
-    "@types/node": "^22.14.0",
-    "@types/react": "^18.3.0",
-    "@types/react-dom": "^18.3.0",
-    "@vitejs/plugin-react": "^6.0.3",
-    "autoprefixer": "^10.4.21",
-    "esbuild": "^0.25.0",
-    "postcss": "^8.5.15",
-    "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
-    "typescript": "~5.8.2",
-    "vite": "^8.1.5"
+    "typescript": "~5.8.2"
   }
 }
