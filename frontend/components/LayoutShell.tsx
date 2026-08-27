@@ -72,6 +72,25 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
     { key: 'contact', txt: t('nav.contact'), path: '/contact' }
   ];
 
+  const isAdminRoute = pathname.startsWith('/admin');
+
+  if (isAdminRoute) {
+    return (
+      <div className="min-h-screen bg-[#FFFBF7] text-[#1C1C2E]">
+        {loaderState.isVisible && (
+          <DogRunningLoader 
+            isVisible={loaderState.isVisible}
+            textOverride={loaderState.title} 
+            subtextOverride={loaderState.subtext} 
+          />
+        )}
+        <main className="min-h-screen">
+          {children}
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#FFFBF7] text-[#1C1C2E] flex flex-col justify-between relative selection:bg-orange-100 selection:text-primary pb-12 lg:pb-0">
       

@@ -10,14 +10,14 @@ import AdminSkeleton from '@/components/ui/AdminSkeleton';
 import { Shield, ShieldAlert, UserCheck, UserMinus, Search, Filter } from 'lucide-react';
 
 export default function UsersConsolePage() {
-  const { user, isAdmin, isLoading: authLoading } = useAuth();
+  const { user, roles, isAdmin, isLoading: authLoading } = useAuth();
   const { toast, showToast } = useToast();
 
   const [searchFilter, setSearchFilter] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
 
-  // Fetch all user structures (restricted to super_admin on API layer)
-  const isSuperAdmin = user?.role === 'super_admin';
+  // Allow all verified admins access to the Users & Roles management console
+  const isSuperAdmin = isAdmin || (roles || []).some(r => ['admin', 'super_admin'].includes(r.toLowerCase()));
   const { data: usersData, isLoading: usersLoading, mutate } = useSWR(
     isSuperAdmin ? '/api/admin/users' : null,
     defaultFetcher

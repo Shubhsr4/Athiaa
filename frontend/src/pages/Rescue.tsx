@@ -92,10 +92,24 @@ export default function RescuePage() {
     }
   };
 
+  // Status feedback states
+  const [dispatchSuccess, setDispatchSuccess] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
   const handleReportSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!location.trim() || !reporterWhatsApp || reporterWhatsApp.length !== 10) {
-      alert("Provide precise location address and valid 10-digit WhatsApp phone");
+    setValidationError(null);
+    setDispatchSuccess(null);
+
+    const cleanPhone = reporterWhatsApp.replace(/\D/g, '').trim();
+
+    if (!location.trim()) {
+      setValidationError("Please enter the specific street address or area location where the animal was spotted.");
+      return;
+    }
+
+    if (!cleanPhone || cleanPhone.length !== 10) {
+      setValidationError("Please enter a valid 10-digit Indian WhatsApp phone number for volunteer coordination.");
       return;
     }
 
@@ -107,7 +121,7 @@ export default function RescuePage() {
       landmark: landmark,
       pincode: pincode,
       reporterName: reporterName || 'Anonymous Caretaker',
-      reporterWhatsApp: reporterWhatsApp.replace(/\D/g, ''),
+      reporterWhatsApp: cleanPhone,
       isEmergency: isEmergency,
       photoUrl: imageFileUrl || undefined,
       status: 'Dispatching',
@@ -121,7 +135,7 @@ export default function RescuePage() {
       latitude: delhiCenter[0] + (Math.random() * 0.02 - 0.01),
       longitude: delhiCenter[1] + (Math.random() * 0.02 - 0.01),
       animalType: animalType,
-      description: `${condition}: ${location} (${landmark})`,
+      description: `${condition}: ${location} (${landmark || 'Street view'})`,
       status: 'Dispatching',
       city: 'Delhi',
       location: location || 'Delhi NCR',
@@ -141,7 +155,7 @@ export default function RescuePage() {
     setIsEmergency(false);
     setImageFileUrl(null);
 
-    alert("EMERGENCY DISPATCH TRANSMITTED!\nOur team has received your report. The coordinate pin-drop has been routed over our volunteer WhatsApp broadcast list.");
+    setDispatchSuccess("Emergency dispatch alert transmitted! Our volunteer ambulance network and local area responders have received your report.");
   };
 
   return (
@@ -187,6 +201,23 @@ export default function RescuePage() {
 
           <form onSubmit={handleReportSubmit} className="space-y-4 text-xs font-sans text-left">
             
+            {dispatchSuccess && (
+              <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl flex items-start gap-2.5 shadow-xs animate-[fadeIn_0.2s_ease-out]">
+                <CheckCircle2 size={18} className="text-emerald-600 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <p className="font-bold text-xs font-baloo">Rescue Dispatch Transmitted</p>
+                  <p className="text-[11px] leading-relaxed text-emerald-700">{dispatchSuccess}</p>
+                </div>
+              </div>
+            )}
+
+            {validationError && (
+              <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl flex items-center gap-2 shadow-xs animate-[fadeIn_0.2s_ease-out]">
+                <AlertCircle size={16} className="text-rose-600 shrink-0" />
+                <span className="text-xs font-medium">{validationError}</span>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-gray-500 uppercase block">Animal Category</label>

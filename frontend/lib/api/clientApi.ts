@@ -526,6 +526,68 @@ export async function handleClientApiRequest(url: string, options: RequestInit =
     };
   }
 
+  if (pathname === '/api/admin/users') {
+    try {
+      const { data: dbProfiles } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      const { data: dbUserRoles } = await supabase.from('user_roles').select('*');
+      const { data: lookupRoles } = await supabase.from('roles').select('*');
+      
+      const roleNameMap = new Map<number, string>();
+      if (lookupRoles) {
+        lookupRoles.forEach((r: any) => roleNameMap.set(r.id, r.name));
+      }
+
+      const userRoleMap = new Map<string, string>();
+      if (dbUserRoles) {
+        dbUserRoles.forEach((ur: any) => {
+          const rName = ur.role || (ur.role_id ? roleNameMap.get(ur.role_id) : 'user');
+          userRoleMap.set(ur.user_id, rName);
+        });
+      }
+
+      const mappedUsers = (dbProfiles || []).map((p: any) => ({
+        id: p.id,
+        name: p.full_name || p.name || 'Athiaa Member',
+        email: p.email || '—',
+        phone: p.phone || '—',
+        role: userRoleMap.get(p.id) || 'donor',
+        created_at: p.created_at || new Date().toISOString()
+      }));
+
+      return { success: true, data: mappedUsers };
+    } catch {
+      return { success: true, data: [] };
+    }
+  }
+
+  if (pathname.includes('/api/profile/') && pathname.endsWith('/role')) {
+    const parts = pathname.split('/');
+    const targetUserId = parts[3];
+    const newRole = bodyData?.role || 'donor';
+
+    try {
+      const { data: matchedRole } = await supabase.from('roles').select('id').eq('name', newRole).maybeSingle();
+      if (matchedRole?.id) {
+        await supabase.from('user_roles').upsert({
+          user_id: targetUserId,
+          role_id: matchedRole.id
+        });
+      } else {
+        await supabase.from('user_roles').upsert({
+          user_id: targetUserId,
+          role: newRole
+        });
+      }
+      return { success: true, message: `Role updated to ${newRole}` };
+    } catch (e: any) {
+      return { success: false, error: e.message };
+    }
+  }
+
   if (pathname === '/api/settings') {
     return { success: true, data: DEFAULT_SETTINGS };
   }
