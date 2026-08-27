@@ -72,7 +72,7 @@ export default function FosterPage() {
   const [fosterApplied, setFosterApplied] = useState(false);
 
   // Submit Foster Form
-  const handleFosterSubmit = (e: React.FormEvent) => {
+  const handleFosterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fosterForm.name || !fosterForm.phone || fosterForm.phone.length !== 10) {
       alert("Please check your contact fields and make sure phone number is 10 digits.");
@@ -81,39 +81,37 @@ export default function FosterPage() {
 
     const targetDog = selectedFosterDog || dogsList[0] || LOCAL_INITIAL_DOGS[0];
 
-    triggerAppletActionLoader("Verifying foster guidelines...", "Submitting details to shelter dispatcher...", async () => {
-      try {
-        const res = await apiFetch('/api/contact', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            category: 'foster',
-            name: fosterForm.name,
-            email: `${fosterForm.phone}@athiaa.org`,
-            phone: fosterForm.phone,
-            subject: `Foster Interest: ${targetDog?.name || 'Any Dog'}`,
-            message: `Foster Duration: ${fosterForm.duration}. Active City: ${fosterForm.city}.`
-          })
-        });
-        const data = await res.json();
-        if (!res.ok || !data.success) {
-          throw new Error(data.error || 'Server error');
-        }
-
-        handleTrackFoster({
-          id: `fst-${Date.now()}`,
-          dogId: targetDog?.id || 'any',
-          dogName: targetDog?.name || 'Any Dog',
-          dogImage: (targetDog as any)?.image || (targetDog as any)?.main_image_url || 'https://images.unsplash.com/photo-1543466835-00a7907e9de1',
-          duration: fosterForm.duration,
-          submittedAt: new Date().toLocaleDateString('en-IN')
-        });
-        setFosterApplied(true);
-      } catch (err: any) {
-        console.error("Foster submit error:", err);
-        alert(`Error submitting foster interest: ${err.message || 'Unable to submit'}`);
+    try {
+      const res = await apiFetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: 'foster',
+          name: fosterForm.name,
+          email: `${fosterForm.phone}@athiaa.org`,
+          phone: fosterForm.phone,
+          subject: `Foster Interest: ${targetDog?.name || 'Any Dog'}`,
+          message: `Foster Duration: ${fosterForm.duration}. Active City: ${fosterForm.city}.`
+        })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Server error');
       }
-    });
+
+      handleTrackFoster({
+        id: `fst-${Date.now()}`,
+        dogId: targetDog?.id || 'any',
+        dogName: targetDog?.name || 'Any Dog',
+        dogImage: (targetDog as any)?.image || (targetDog as any)?.main_image_url || 'https://images.unsplash.com/photo-1543466835-00a7907e9de1',
+        duration: fosterForm.duration,
+        submittedAt: new Date().toLocaleDateString('en-IN')
+      });
+      setFosterApplied(true);
+    } catch (err: any) {
+      console.error("Foster submit error:", err);
+      alert(`Error submitting foster interest: ${err.message || 'Unable to submit'}`);
+    }
   };
 
   return (

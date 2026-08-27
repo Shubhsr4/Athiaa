@@ -35,8 +35,7 @@ export default function DashboardPage() {
     favoriteDogs, 
     adoptionApplications, 
     fosterRecords, 
-    donationHistory,
-    triggerAppletActionLoader 
+    donationHistory
   } = useAppContext();
 
   const {

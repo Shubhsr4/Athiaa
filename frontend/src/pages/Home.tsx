@@ -33,6 +33,7 @@ import InteractiveTiltCard from '@/components/ui/InteractiveTiltCard';
 import { useAppContext } from '@/components/providers/AppContext';
 import { useDogs } from '@/lib/hooks/useDogs';
 import { useCampaigns } from '@/lib/hooks/useCampaigns';
+import { useEvents } from '@/lib/hooks/useEvents';
 import DelhiMap from '@/src/components/DelhiMap';
 import { useRescueReports } from '@/lib/hooks/useRescueReports';
 import { useSuccessStories } from '@/lib/hooks/useSuccessStories';
@@ -338,7 +339,7 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <button 
                 id="hero-adopt-btn"
-                onClick={() => triggerAppletActionLoader("Loading Adopt Registry...", "Connecting local rescue networks...", () => navigate('/adopt'))} 
+                onClick={() => navigate('/adopt')} 
                 className="bg-gradient-to-r from-[#E8572A] to-[#FF804F] hover:from-primary-hover hover:to-primary text-white text-base font-semibold px-8 py-4 rounded-2xl shadow-warm hover:shadow-warm-lg hover:-translate-y-1 transition duration-300 flex items-center justify-center space-x-2 cursor-pointer"
               >
                 <PawPrint size={18} />
@@ -347,7 +348,7 @@ export default function HomePage() {
               </button>
               <button 
                 id="hero-donate-btn"
-                onClick={() => triggerAppletActionLoader("Linking Saffron gateway...", "Loading tax deductions info...", () => navigate('/donate'))}
+                onClick={() => navigate('/donate')}
                 className="bg-white hover:bg-cream text-primary border-2 border-primary/20 text-base font-semibold px-8 py-4 rounded-2xl hover:-translate-y-1 transition duration-300 flex items-center justify-center space-x-2 shadow-sm cursor-pointer"
               >
                 <Heart size={18} className="fill-primary" />

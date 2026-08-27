@@ -42,36 +42,24 @@ export default function EventsPage() {
   const [eventRSVPName, setEventRSVPName] = useState('');
   const [selectedEventForRSVP, setSelectedEventForRSVP] = useState<any | null>(null);
 
-  const handleRSVPSubmit = (e: React.FormEvent) => {
+  const handleRSVPSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!eventRSVPName || !selectedEventForRSVP) return;
-    triggerAppletActionLoader("Securing RSVP invitation...", "Generating WhatsApp reminder code...", async () => {
-      try {
-        await registerForEvent(selectedEventForRSVP.id, {
-          name: eventRSVPName,
-          email: `${eventRSVPName.replace(/\s+/g, '').toLowerCase()}@example.com`,
-          phone: '9876543210',
-          attendee_count: 1
-        });
-        setEventRSVP(prev => ({ ...prev, [selectedEventForRSVP.id]: true }));
-        setSelectedEventForRSVP(null);
-        setEventRSVPName('');
-      } catch (err: any) {
-        console.error("RSVP error:", err);
-        alert(`RSVP failed: ${err.message || 'Verification rejected'}`);
-      }
-    });
+    try {
+      await registerForEvent(selectedEventForRSVP.id, {
+        name: eventRSVPName,
+        email: `${eventRSVPName.replace(/\s+/g, '').toLowerCase()}@example.com`,
+        phone: '9876543210',
+        attendee_count: 1
+      });
+      setEventRSVP(prev => ({ ...prev, [selectedEventForRSVP.id]: true }));
+      setSelectedEventForRSVP(null);
+      setEventRSVPName('');
+    } catch (err: any) {
+      console.error("RSVP error:", err);
+      alert(`RSVP failed: ${err.message || 'Verification rejected'}`);
+    }
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-cream">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  if (error) return null;
 
   return (
     <div id="athiaa-events-view" className="max-w-7xl mx-auto px-4 py-16 relative space-y-12 text-left font-sans">

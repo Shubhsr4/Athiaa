@@ -49,13 +49,9 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
   const handleCheckoutCartFromDrawer = () => {
     if (cartItems.length === 0) return;
     const finalBill = getCartTotal();
-    
-    triggerAppletActionLoader("Sourcing payment gateway secure pipeline...", "Deducting shipping logistics margins...", () => {
-      // Completed merch transaction model
-      setCartItems([]);
-      setCartOpen(false);
-      alert(`Merch order placed successfully for ₹${finalBill.toLocaleString()}!\nProceeds added directly to rescue medicine caches.`);
-    });
+    setCartItems([]);
+    setCartOpen(false);
+    alert(`Merch order placed successfully for ₹${finalBill.toLocaleString()}!\nProceeds added directly to rescue medicine caches.`);
   };
 
   const currentLangLabel = i18n.language?.toLowerCase().startsWith('hi') ? 'HI' : 'EN';

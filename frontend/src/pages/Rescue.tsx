@@ -99,53 +99,49 @@ export default function RescuePage() {
       return;
     }
 
-    triggerAppletActionLoader("Assigning rescue coordinates...", "Locking mobile cellular telemetry...", () => {
-      triggerAppletActionLoader("Dispatching Athiaa Field scooter...", "Notifying local area coordinator groups...", () => {
-        const reportPayload: TypeRescueReport = {
-          id: `rep-${Date.now()}`,
-          animalType: animalType,
-          condition: condition,
-          location: location,
-          landmark: landmark,
-          pincode: pincode,
-          reporterName: reporterName || 'Anonymous Caretaker',
-          reporterWhatsApp: reporterWhatsApp.replace(/\D/g, ''),
-          isEmergency: isEmergency,
-          photoUrl: imageFileUrl || undefined,
-          status: 'Dispatching',
-          submittedAt: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-          assignedVolunteer: isEmergency ? 'Express Ambulance Van 2' : 'Area Partner Clinic'
-        };
+    const reportPayload: TypeRescueReport = {
+      id: `rep-${Date.now()}`,
+      animalType: animalType,
+      condition: condition,
+      location: location,
+      landmark: landmark,
+      pincode: pincode,
+      reporterName: reporterName || 'Anonymous Caretaker',
+      reporterWhatsApp: reporterWhatsApp.replace(/\D/g, ''),
+      isEmergency: isEmergency,
+      photoUrl: imageFileUrl || undefined,
+      status: 'Dispatching',
+      submittedAt: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+      assignedVolunteer: isEmergency ? 'Express Ambulance Van 2' : 'Area Partner Clinic'
+    };
 
-        const delhiCenter = [28.6139, 77.2090];
-        const newMapReport: RescueReport = {
-          id: `map-rep-${Date.now()}`,
-          latitude: delhiCenter[0] + (Math.random() * 0.02 - 0.01),
-          longitude: delhiCenter[1] + (Math.random() * 0.02 - 0.01),
-          animalType: animalType,
-          description: `${condition}: ${location} (${landmark})`,
-          status: 'Dispatching',
-          city: 'Delhi',
-          location: location || 'Delhi NCR',
-          reportedAt: 'Just now',
-          urgency: isEmergency ? 'critical' : 'moderate'
-        };
-        setCustomUserReports(prev => [newMapReport, ...prev]);
+    const delhiCenter = [28.6139, 77.2090];
+    const newMapReport: RescueReport = {
+      id: `map-rep-${Date.now()}`,
+      latitude: delhiCenter[0] + (Math.random() * 0.02 - 0.01),
+      longitude: delhiCenter[1] + (Math.random() * 0.02 - 0.01),
+      animalType: animalType,
+      description: `${condition}: ${location} (${landmark})`,
+      status: 'Dispatching',
+      city: 'Delhi',
+      location: location || 'Delhi NCR',
+      reportedAt: 'Just now',
+      urgency: isEmergency ? 'critical' : 'moderate'
+    };
+    setCustomUserReports(prev => [newMapReport, ...prev]);
 
-        handleSubmitRescueReport(reportPayload);
+    handleSubmitRescueReport(reportPayload);
 
-        // Reset form inputs
-        setLocation('');
-        setLandmark('');
-        setPincode('');
-        setReporterName('');
-        setReporterWhatsApp('');
-        setIsEmergency(false);
-        setImageFileUrl(null);
+    // Reset form inputs
+    setLocation('');
+    setLandmark('');
+    setPincode('');
+    setReporterName('');
+    setReporterWhatsApp('');
+    setIsEmergency(false);
+    setImageFileUrl(null);
 
-        alert("EMERGENCY DISPATCH TRANSMITTED!\nOur team has received your report. The coordinate pin-drop has been routed over our volunteer WhatsApp broadcast list.");
-      });
-    });
+    alert("EMERGENCY DISPATCH TRANSMITTED!\nOur team has received your report. The coordinate pin-drop has been routed over our volunteer WhatsApp broadcast list.");
   };
 
   return (

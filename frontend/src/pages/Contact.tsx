@@ -21,45 +21,35 @@ export default function ContactPage() {
   } : null as any;
 
   // Contact Form Submit
-  const handleContactSubmit = (e: React.FormEvent) => {
+  const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (contactForm.phone.length !== 10) {
       alert("Provide a valid 10-digit phone number");
       return;
     }
-    triggerAppletActionLoader("Dispatching inquiry ticket...", "Notifying departmental leads under IST support...", async () => {
-      try {
-        const res = await apiFetch('/api/contact', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            category: 'general',
-            name: contactForm.name,
-            email: `${contactForm.phone}@athiaa.org`,
-            phone: contactForm.phone,
-            subject: `Contact Dept Inquiry: ${contactForm.dept} (${contactForm.city})`,
-            message: contactForm.message
-          })
-        });
-        const data = await res.json();
-        if (!res.ok || !data.success) {
-          throw new Error(data.error || 'Server error');
-        }
-        setContactSubmitted(true);
-      } catch (err: any) {
-        console.error("Contact submit error:", err);
-        alert(`Status: Message logged locally but contact sync returned: ${err.message || 'Inquiry could not be parsed'}`);
+    try {
+      const res = await apiFetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: 'general',
+          name: contactForm.name,
+          email: `${contactForm.phone}@athiaa.org`,
+          phone: contactForm.phone,
+          subject: `Contact Dept Inquiry: ${contactForm.dept} (${contactForm.city})`,
+          message: contactForm.message
+        })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Server error');
       }
-    });
+      setContactSubmitted(true);
+    } catch (err: any) {
+      console.error("Contact submit error:", err);
+      alert(`Status: Message logged locally but contact sync returned: ${err.message || 'Inquiry could not be parsed'}`);
+    }
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-cream">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
 
   if (error) return null;
 

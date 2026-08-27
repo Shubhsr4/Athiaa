@@ -671,9 +671,7 @@ export default function DonatePage() {
             </select>
             <button 
               type="button"
-              onClick={() => triggerAppletActionLoader("Submitting CSR Inquiry...", "Sending credentials to Partner Relations Lead...", () => {
-                alert("Inquiry successfully transmitted! Our CSR coordinator will reach out in 1 business day.");
-              })}
+              onClick={() => alert("Inquiry successfully transmitted! Our CSR coordinator will reach out in 1 business day.")}
               className="w-full bg-deep hover:bg-slate-900 text-white font-bold py-2 rounded-lg text-[11px] cursor-pointer"
             >
               Submit Partnership Request

@@ -279,9 +279,7 @@ export default function AdoptPage() {
     }
 
     setFormValidationErrors({});
-    triggerAppletActionLoader("Agle badha rahe hain...", "Ferrying application guidelines safely...", () => {
-      setFormStep(prev => prev + 1);
-    });
+    setFormStep(prev => prev + 1);
   };
 
   const handlePrevStep = () => {
@@ -297,42 +295,40 @@ export default function AdoptPage() {
 
     if (!selectedDog) return;
 
-    triggerAppletActionLoader("Athia team registers application...", "Submitting verification details to NGO panel...", () => {
-      const applicationPayload: AdoptionApplication = {
-        id: `app-${Date.now()}`,
-        dogId: selectedDog.id,
-        dogName: selectedDog.name,
-        dogImage: selectedDog.image,
-        status: 'In Review',
-        submittedAt: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-        fullName: appForm.fullName,
-        age: appForm.age,
-        idType: appForm.idType,
-        idNumber: appForm.idNumber,
-        phone: appForm.phone,
-        email: appForm.email,
-        city: selectedDog.city,
-        pincode: appForm.pincode,
-        ownership: appForm.ownership,
-        homeType: appForm.homeType,
-        outdoorSpace: appForm.outdoorSpace,
-        landlordPermission: appForm.landlordPermission,
-        workingHours: appForm.workingHours,
-        dailyRoutine: appForm.dailyRoutine,
-        householdMembersCount: appForm.householdMembersCount,
-        hasChildren: appForm.hasChildren,
-        activityLevel: appForm.activityLevel,
-        firstTimeOwner: appForm.firstTimeOwner,
-        previousPetDetails: appForm.previousPetDetails,
-        reasonForAdopting: appForm.reasonForAdopting,
-        referralSource: appForm.referralSource,
-        signature: appForm.signature
-      };
+    const applicationPayload: AdoptionApplication = {
+      id: `app-${Date.now()}`,
+      dogId: selectedDog.id,
+      dogName: selectedDog.name,
+      dogImage: selectedDog.image,
+      status: 'In Review',
+      submittedAt: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+      fullName: appForm.fullName,
+      age: appForm.age,
+      idType: appForm.idType,
+      idNumber: appForm.idNumber,
+      phone: appForm.phone,
+      email: appForm.email,
+      city: selectedDog.city,
+      pincode: appForm.pincode,
+      ownership: appForm.ownership,
+      homeType: appForm.homeType,
+      outdoorSpace: appForm.outdoorSpace,
+      landlordPermission: appForm.landlordPermission,
+      workingHours: appForm.workingHours,
+      dailyRoutine: appForm.dailyRoutine,
+      householdMembersCount: appForm.householdMembersCount,
+      hasChildren: appForm.hasChildren,
+      activityLevel: appForm.activityLevel,
+      firstTimeOwner: appForm.firstTimeOwner,
+      previousPetDetails: appForm.previousPetDetails,
+      reasonForAdopting: appForm.reasonForAdopting,
+      referralSource: appForm.referralSource,
+      signature: appForm.signature
+    };
 
-      handleSubmitApplication(applicationPayload);
-      setIsApplying(false);
-      handleClearSelectedDog();
-    });
+    handleSubmitApplication(applicationPayload);
+    setIsApplying(false);
+    handleClearSelectedDog();
   };
 
   return (
@@ -974,11 +970,7 @@ export default function AdoptPage() {
             ].map(spec => (
               <button
                 key={spec.id}
-                onClick={() => {
-                  triggerAppletActionLoader(`Switching to ${spec.label}...`, `Filtering resident ${spec.label.toLowerCase()}...`, () => {
-                    setFilterSpecies(spec.id);
-                  });
-                }}
+                onClick={() => setFilterSpecies(spec.id)}
                 className={`px-5 py-3 rounded-2xl text-xs font-bold transition-all duration-300 flex items-center space-x-2 border shadow-warm-sm cursor-pointer ${
                   filterSpecies === spec.id
                     ? 'bg-primary text-white border-primary scale-105 shadow-md'
