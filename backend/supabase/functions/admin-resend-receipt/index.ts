@@ -1,7 +1,6 @@
-// supabase/functions/admin-resend-receipt/index.ts
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.8';
-import { corsHeaders } from '../_shared/auth-middleware.ts';
+import { requireAuth, requireRole, corsHeaders } from '../_shared/auth-middleware.ts';
 import { sendReceiptEmailWithAttachment } from '../_shared/resend-service.ts';
 import { generate80GReceiptPdf } from '../_shared/receipt-generator.ts';
 
@@ -11,34 +10,13 @@ serve(async (req: Request) => {
   }
 
   try {
-    const authHeader = req.headers.get('Authorization') || '';
+    // 1. Verify JWT & Enforce Admin Role
+    const { user } = await requireAuth(req);
+    await requireRole(user, 'admin');
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
-
-    // Verify requesting user is admin
-    const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
-    const { data: { user }, error: authErr } = await supabaseUser.auth.getUser();
-
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-
-    if (user) {
-      const { data: roleData } = await supabaseAdmin
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .in('role', ['admin', 'super_admin'])
-        .maybeSingle();
-
-      if (!roleData) {
-        return new Response(
-          JSON.stringify({ error: 'Forbidden: Admin authorization required' }),
-          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-    }
 
     const body = await req.json().catch(() => ({}));
     const { donation_id, override_email } = body;

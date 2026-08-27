@@ -7,52 +7,69 @@ import {
   Mail,
   Lock,
   User,
-  MapPin,
+  Phone,
   CheckCircle2,
-  KeyRound,
   ArrowLeft
 } from 'lucide-react';
 import { useAuthContext } from '@/components/providers/AuthProvider';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 export default function LoginPage() {
   const { t } = useTranslation();
-  const { user, signIn, signUp, resetPassword, loginUser, isAdmin } = useAuthContext();
+  const { user, signIn, signUp, resetPassword, updatePassword, loginUser, isAdmin } = useAuthContext();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  // Mode state: 'signin' | 'signup' | 'forgot'
-  const [authMode, setAuthMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
+  // Mode state: 'signin' | 'signup' | 'forgot' | 'reset'
+  const [authMode, setAuthMode] = useState<'signin' | 'signup' | 'forgot' | 'reset'>('signin');
 
   // Form Fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [city, setCity] = useState('Delhi NCR');
+  const [phone, setPhone] = useState('');
 
   // Status feedback state
   const [authError, setAuthError] = useState<string | null>(null);
   const [authSuccess, setAuthSuccess] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Redirect if already authenticated
+  // Check URL params or hash for password recovery
   useEffect(() => {
-    if (user) {
+    const modeParam = searchParams.get('mode');
+    if (modeParam === 'reset' || window.location.hash.includes('type=recovery')) {
+      setAuthMode('reset');
+    }
+  }, [searchParams]);
+
+  // Redirect if already authenticated (unless in password reset mode)
+  useEffect(() => {
+    if (user && authMode !== 'reset') {
       navigate(isAdmin ? '/admin' : '/dashboard');
     }
-  }, [user, isAdmin, navigate]);
+  }, [user, isAdmin, authMode, navigate]);
 
-  // Handle Email + Password Sign In
+  // Handle Email + Password Sign In (Email + Password only)
   const handleSignInSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
     setAuthSuccess(null);
+
+    if (!email.trim() || !password) {
+      setAuthError('Please provide both email and password.');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
       const { data, error } = await signIn(email.trim(), password);
       if (error) {
-        if (error.message?.includes('Email not confirmed')) {
-          setAuthError('Your email address is not verified yet. Please check your inbox for the confirmation link.');
+        if (error.message?.toLowerCase().includes('email not confirmed')) {
+          setAuthError('Your email address is not verified yet. Please check your inbox for the confirmation link before logging in.');
+        } else if (error.message?.toLowerCase().includes('invalid login credentials')) {
+          setAuthError('Invalid email or password. Please check your credentials and try again.');
         } else {
           setAuthError(error.message || 'Invalid email or password.');
         }
@@ -66,48 +83,71 @@ export default function LoginPage() {
     }
   };
 
-  // Handle Email + Password Sign Up
+  // Handle Registration (Full Name, Phone, Email, Password min 8 chars, Confirm Password)
   const handleSignUpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password || !fullName.trim()) {
-      setAuthError('Please fill in all required fields.');
+    setAuthError(null);
+    setAuthSuccess(null);
+
+    const cleanFullName = fullName.trim();
+    const cleanPhone = phone.replace(/\D/g, '').trim();
+    const cleanEmail = email.trim();
+
+    // Client-side validations
+    if (!cleanFullName) {
+      setAuthError('Please enter your full name.');
       return;
     }
-    if (password.length < 6) {
-      setAuthError('Password must be at least 6 characters long.');
+    if (!cleanPhone || cleanPhone.length !== 10) {
+      setAuthError('Please enter a valid 10-digit Indian phone number.');
+      return;
+    }
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      setAuthError('Please enter a valid email address.');
+      return;
+    }
+    if (password.length < 8) {
+      setAuthError('Password must be at least 8 characters long for security.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setAuthError('Passwords do not match. Please re-enter.');
       return;
     }
 
-    setAuthError(null);
-    setAuthSuccess(null);
     setIsSubmitting(true);
 
     try {
-      const { data, error } = await signUp(email.trim(), password, {
-        full_name: fullName.trim(),
-        city: city
+      // Passes full_name and phone via options.data so Postgres trigger populates profiles & assigns 'user' role
+      const { data, error } = await signUp(cleanEmail, password, {
+        full_name: cleanFullName,
+        phone: cleanPhone
       });
 
       if (error) {
-        if (error.message?.toLowerCase().includes('rate limit')) {
-          setAuthError('Supabase default email SMTP rate limit reached (max 3 confirmation emails/hr). To test sign-ups freely: in Supabase Dashboard go to Authentication -> Providers -> Email -> turn OFF "Confirm email". Or use Instant Demo Admin Sign-In below.');
+        if (error.message?.toLowerCase().includes('user already registered')) {
+          setAuthError('An account with this email address already exists. Please sign in instead.');
+        } else if (error.message?.toLowerCase().includes('rate limit')) {
+          setAuthError('Email rate limit reached. If testing locally, check your Supabase SMTP settings or confirm email configuration.');
         } else {
-          setAuthError(error.message || 'Sign up failed.');
+          setAuthError(error.message || 'Registration failed.');
         }
       } else {
-        setAuthSuccess('Account created successfully! If email confirmation is enabled, check your inbox. Otherwise, you can sign in directly!');
+        setAuthSuccess('Registration successful! Please check your email inbox to confirm your account before your first login.');
         setEmail('');
         setPassword('');
+        setConfirmPassword('');
         setFullName('');
+        setPhone('');
       }
     } catch (err: any) {
-      setAuthError(err.message || 'Sign up error.');
+      setAuthError(err.message || 'Registration error.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Handle Forgot Password
+  // Handle Forgot Password (Password Recovery)
   const handleForgotSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
@@ -122,9 +162,9 @@ export default function LoginPage() {
     try {
       const { error } = await resetPassword(email.trim());
       if (error) {
-        setAuthError(error.message || 'Failed to send password reset email.');
+        setAuthError(error.message || 'Failed to send password recovery email.');
       } else {
-        setAuthSuccess('Password reset link sent! Please check your email inbox.');
+        setAuthSuccess('Password recovery email dispatched! Click the link in your inbox to set a new password.');
       }
     } catch (err: any) {
       setAuthError(err.message || 'Reset password error.');
@@ -133,16 +173,37 @@ export default function LoginPage() {
     }
   };
 
-  // Demo Admin quick sign-in helper
-  const handleDemoAdminLogin = () => {
-    loginUser({
-      uid: `admin-demo-${Date.now()}`,
-      name: 'Demo Administrator',
-      email: 'admin@athiaa.org',
-      city: 'Delhi NCR',
-      role: 'Admin'
-    });
-    navigate('/admin');
+  // Handle Password Reset Update
+  const handleResetPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password.length < 8) {
+      setAuthError('New password must be at least 8 characters long.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setAuthError('Passwords do not match.');
+      return;
+    }
+
+    setAuthError(null);
+    setAuthSuccess(null);
+    setIsSubmitting(true);
+
+    try {
+      const { error } = await updatePassword(password);
+      if (error) {
+        setAuthError(error.message || 'Failed to update password.');
+      } else {
+        setAuthSuccess('Password updated successfully! You can now sign in with your new password.');
+        setPassword('');
+        setConfirmPassword('');
+        setTimeout(() => setAuthMode('signin'), 1500);
+      }
+    } catch (err: any) {
+      setAuthError(err.message || 'Password update error.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -154,35 +215,11 @@ export default function LoginPage() {
           <div className="absolute inset-0 bg-gradient-to-r from-[#E8572A]/20 to-transparent pointer-events-none" />
           <p className="text-2xl font-bold font-baloo">Athiaa Portal Account</p>
           <p className="text-[11px] text-gray-300 font-medium leading-relaxed">
-            JWT email authentication & role portal for donors, volunteers, rescuers, and staff.
+            Secure Supabase Auth with Role-Based Access Control for donors, volunteers, and staff.
           </p>
         </div>
 
         <div className="p-6 space-y-4">
-          
-          {/* Quick Demo Admin Banner */}
-          <div className="bg-gradient-to-r from-[#E8572A] to-amber-500 p-4 rounded-2xl text-white shadow-warm space-y-2.5">
-            <div className="flex justify-between items-center">
-              <span className="text-[9px] font-extrabold uppercase tracking-wider font-mono bg-white/20 px-2 py-0.5 rounded-md">
-                ⚡ DEMO ADMIN ACCESS
-              </span>
-              <span className="text-[10px] font-mono font-bold text-amber-100">Role: Administrator</span>
-            </div>
-            <div>
-              <h4 className="font-baloo text-base font-bold leading-tight">Instant Demo Admin Login</h4>
-              <p className="text-[11px] text-orange-100 mt-0.5 leading-snug">
-                Overview the NGO operations console, volunteer roster, adoptions, and rescue dispatch.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleDemoAdminLogin}
-              className="w-full bg-white hover:bg-orange-50 text-[#E8572A] font-extrabold py-2.5 rounded-xl text-xs shadow transition cursor-pointer flex items-center justify-center space-x-1.5"
-            >
-              <ShieldCheck size={16} className="text-[#E8572A]" />
-              <span>Sign In as Demo Admin</span>
-            </button>
-          </div>
 
           {/* Feedback messages */}
           {authError && (
@@ -200,7 +237,7 @@ export default function LoginPage() {
           )}
 
           {/* Mode Selector Tabs (Sign In / Sign Up) */}
-          {authMode !== 'forgot' && (
+          {authMode !== 'forgot' && authMode !== 'reset' && (
             <div className="flex bg-cream p-1 rounded-xl border border-orange-100">
               <button 
                 type="button"
@@ -219,7 +256,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* SIGN IN FORM */}
+          {/* 1. SIGN IN FORM (Email + Password only) */}
           {authMode === 'signin' && (
             <form onSubmit={handleSignInSubmit} className="space-y-3 text-xs">
               <div className="space-y-1 block">
@@ -232,7 +269,7 @@ export default function LoginPage() {
                     disabled={isSubmitting}
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    placeholder="e.g. donor@athiaa.org" 
+                    placeholder="e.g. yourname@example.com" 
                     className="w-full bg-cream border border-orange-100 rounded-xl py-3 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:border-primary text-deep"
                   />
                 </div>
@@ -244,7 +281,7 @@ export default function LoginPage() {
                   <button 
                     type="button" 
                     onClick={() => { setAuthMode('forgot'); setAuthError(null); setAuthSuccess(null); }}
-                    className="text-[10px] font-bold text-primary hover:underline"
+                    className="text-[10px] font-bold text-primary hover:underline cursor-pointer"
                   >
                     Forgot password?
                   </button>
@@ -268,12 +305,12 @@ export default function LoginPage() {
                 disabled={isSubmitting}
                 className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3.5 rounded-xl uppercase tracking-wider text-xs font-baloo cursor-pointer shadow-sm text-center flex items-center justify-center space-x-2 disabled:opacity-50"
               >
-                {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <span>Sign In to Account</span>}
+                {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <span>Sign In with Email</span>}
               </button>
             </form>
           )}
 
-          {/* SIGN UP FORM */}
+          {/* 2. SIGN UP FORM (Full Name, Phone, Email, Password min 8 chars, Confirm Password) */}
           {authMode === 'signup' && (
             <form onSubmit={handleSignUpSubmit} className="space-y-3 text-xs">
               <div className="space-y-1 block">
@@ -292,45 +329,49 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div className="space-y-1 block">
-                  <label className="text-[10px] font-bold text-gray-400 uppercase block font-mono">Email Address *</label>
+              <div className="space-y-1 block">
+                <label className="text-[10px] font-bold text-gray-400 uppercase block font-mono">Phone Number (10 Digits) *</label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 font-mono text-xs font-bold">+91</span>
                   <input 
-                    type="email" 
+                    type="tel" 
                     required
+                    maxLength={10}
                     disabled={isSubmitting}
-                    placeholder="e.g. name@example.com" 
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    className="w-full bg-cream border border-orange-100 rounded-xl p-3 text-xs font-semibold focus:outline-none focus:border-primary text-deep"
+                    placeholder="9876543210" 
+                    value={phone}
+                    onChange={e => setPhone(e.target.value.replace(/\D/g, ''))}
+                    className="w-full bg-cream border border-orange-100 rounded-xl py-3 pl-12 pr-4 text-xs font-semibold focus:outline-none focus:border-primary text-deep font-mono"
                   />
-                </div>
-                <div className="space-y-1 block">
-                  <label className="text-[10px] font-bold text-gray-400 uppercase block font-mono">Preferred City</label>
-                  <select 
-                    value={city}
-                    disabled={isSubmitting}
-                    onChange={e => setCity(e.target.value)}
-                    className="w-full bg-cream border border-orange-100 rounded-xl p-3 text-xs text-deep outline-none focus:border-primary font-bold"
-                  >
-                    <option>Delhi NCR</option>
-                    <option>Mumbai</option>
-                    <option>Bengaluru</option>
-                    <option>Pune</option>
-                  </select>
                 </div>
               </div>
 
               <div className="space-y-1 block">
-                <label className="text-[10px] font-bold text-gray-400 uppercase block font-mono">Password (Min 6 chars) *</label>
+                <label className="text-[10px] font-bold text-gray-400 uppercase block font-mono">Email Address *</label>
+                <div className="relative">
+                  <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input 
+                    type="email" 
+                    required
+                    disabled={isSubmitting}
+                    placeholder="e.g. shruti@example.com" 
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    className="w-full bg-cream border border-orange-100 rounded-xl py-3 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:border-primary text-deep"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1 block">
+                <label className="text-[10px] font-bold text-gray-400 uppercase block font-mono">Password (Min 8 Characters) *</label>
                 <div className="relative">
                   <Lock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input 
                     type="password" 
                     required
-                    minLength={6}
+                    minLength={8}
                     disabled={isSubmitting}
-                    placeholder="Create secure password" 
+                    placeholder="Create secure password (min 8 chars)" 
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     className="w-full bg-cream border border-orange-100 rounded-xl py-3 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:border-primary text-deep"
@@ -338,8 +379,25 @@ export default function LoginPage() {
                 </div>
               </div>
 
+              <div className="space-y-1 block">
+                <label className="text-[10px] font-bold text-gray-400 uppercase block font-mono">Confirm Password *</label>
+                <div className="relative">
+                  <Lock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input 
+                    type="password" 
+                    required
+                    minLength={8}
+                    disabled={isSubmitting}
+                    placeholder="Confirm secure password" 
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    className="w-full bg-cream border border-orange-100 rounded-xl py-3 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:border-primary text-deep"
+                  />
+                </div>
+              </div>
+
               <p className="text-[10px] text-gray-400 font-medium leading-relaxed">
-                By signing up, you will automatically be assigned default <span className="font-bold text-primary font-mono uppercase">Donor</span> role privileges.
+                New accounts automatically receive default <span className="font-bold text-primary font-mono uppercase">User</span> role privileges. Email confirmation is required prior to login.
               </p>
 
               <button 
@@ -347,19 +405,19 @@ export default function LoginPage() {
                 disabled={isSubmitting}
                 className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3.5 rounded-xl uppercase tracking-wider text-xs font-baloo cursor-pointer shadow-sm text-center flex items-center justify-center space-x-2 disabled:opacity-50"
               >
-                {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <span>Create Account & Send Verification</span>}
+                {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <span>Register & Send Verification Link</span>}
               </button>
             </form>
           )}
 
-          {/* FORGOT PASSWORD FORM */}
+          {/* 3. FORGOT PASSWORD FORM */}
           {authMode === 'forgot' && (
             <form onSubmit={handleForgotSubmit} className="space-y-3 text-xs">
               <div className="flex items-center gap-2 mb-2">
                 <button 
                   type="button" 
                   onClick={() => { setAuthMode('signin'); setAuthError(null); setAuthSuccess(null); }}
-                  className="text-gray-400 hover:text-deep flex items-center gap-1 font-bold text-[11px]"
+                  className="text-gray-400 hover:text-deep flex items-center gap-1 font-bold text-[11px] cursor-pointer"
                 >
                   <ArrowLeft size={14} /> Back to Sign In
                 </button>
@@ -386,7 +444,54 @@ export default function LoginPage() {
                 disabled={isSubmitting}
                 className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3.5 rounded-xl uppercase tracking-wider text-xs font-baloo cursor-pointer shadow-sm text-center flex items-center justify-center space-x-2 disabled:opacity-50"
               >
-                {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <span>Send Password Reset Email</span>}
+                {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <span>Send Password Reset Link</span>}
+              </button>
+            </form>
+          )}
+
+          {/* 4. SET NEW PASSWORD FORM (When arriving via recovery link) */}
+          {authMode === 'reset' && (
+            <form onSubmit={handleResetPasswordSubmit} className="space-y-3 text-xs">
+              <div className="space-y-1 block">
+                <label className="text-[10px] font-bold text-gray-400 uppercase block font-mono">New Password (Min 8 Characters) *</label>
+                <div className="relative">
+                  <Lock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input 
+                    type="password" 
+                    required
+                    minLength={8}
+                    disabled={isSubmitting}
+                    placeholder="Enter new secure password" 
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    className="w-full bg-cream border border-orange-100 rounded-xl py-3 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:border-primary text-deep"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1 block">
+                <label className="text-[10px] font-bold text-gray-400 uppercase block font-mono">Confirm New Password *</label>
+                <div className="relative">
+                  <Lock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input 
+                    type="password" 
+                    required
+                    minLength={8}
+                    disabled={isSubmitting}
+                    placeholder="Confirm new secure password" 
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    className="w-full bg-cream border border-orange-100 rounded-xl py-3 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:border-primary text-deep"
+                  />
+                </div>
+              </div>
+
+              <button 
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3.5 rounded-xl uppercase tracking-wider text-xs font-baloo cursor-pointer shadow-sm text-center flex items-center justify-center space-x-2 disabled:opacity-50"
+              >
+                {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <span>Update Password & Sign In</span>}
               </button>
             </form>
           )}

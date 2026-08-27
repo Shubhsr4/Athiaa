@@ -11,6 +11,18 @@ interface RequireRoleProps {
   fallback?: React.ReactNode;
 }
 
+/**
+ * NOTE ON SECURITY ARCHITECTURE:
+ * <RequireRole> is a client-side UX convenience component to hide/show UI and redirect
+ * unauthorized users gracefully.
+ * 
+ * The TRUE, UNBYPASSABLE SECURITY ENFORCEMENT is performed at:
+ * 1. Database Layer: PostgreSQL Row Level Security (RLS) policies using has_role(auth.uid(), 'admin').
+ * 2. API / Backend Layer: Supabase Edge Functions using requireAuth(req) and requireRole(user, 'admin').
+ * 
+ * Even if a user bypasses client-side React code (e.g. via DevTools, Postman, or curl),
+ * they cannot read/write protected database tables or execute admin Edge Functions.
+ */
 export default function RequireRole({ 
   role, 
   roles, 

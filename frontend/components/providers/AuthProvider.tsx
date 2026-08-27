@@ -4,20 +4,19 @@ import { createClient } from '@/lib/supabase/client';
 import { Profile } from '@/types';
 
 interface AuthContextType {
-  user: any;
+  user: User | null;
   profile: Profile | null;
   session: Session | null;
   roles: string[];
   isAdmin: boolean;
   isLoading: boolean;
   hasRole: (roleName: string) => boolean;
-  signUp: (email: string, password: string, metadata?: Record<string, any>) => Promise<{ data: any; error: any }>;
+  signUp: (email: string, password: string, metadata: { full_name: string; phone: string; [key: string]: any }) => Promise<{ data: any; error: any }>;
   signIn: (email: string, password: string) => Promise<{ data: any; error: any }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ data: any; error: any }>;
+  updatePassword: (newPassword: string) => Promise<{ data: any; error: any }>;
   refreshProfile: () => Promise<void>;
-  loginUser: (p: any) => void;
-  logoutUser: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,59 +27,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [customUser, setCustomUser] = useState<any | null>(null);
 
-  let supabase: any;
-  let hasError = false;
-  try {
-    supabase = createClient();
-  } catch {
-    hasError = true;
-  }
-
-  // Load custom demo user if stored in local storage
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('athiaa_user') || localStorage.getItem('athia_user');
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          setCustomUser(parsed);
-          if (parsed?.role?.toLowerCase() === 'admin') {
-            setRoles(['admin', 'donor']);
-          } else {
-            setRoles(['donor']);
-          }
-        } catch (e) {
-          console.error(e);
-        }
-      }
-    }
-  }, []);
+  const supabase = createClient();
 
   const fetchProfileAndRoles = useCallback(async (userId: string) => {
-    if (!supabase) return;
+    if (!supabase || !userId) return;
     try {
-      // Parallel fetch profile and roles
-      const [{ data: prof }, { data: userRoleRecords }] = await Promise.all([
+      // Parallel fetch profile and joined user_roles
+      const [{ data: prof, error: profErr }, { data: userRoleRecords, error: rolesErr }] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
-        supabase.from('user_roles').select('role').eq('user_id', userId)
+        supabase.from('user_roles').select('role_id, role, roles(name)').eq('user_id', userId)
       ]);
 
-      if (prof) setProfile(prof as Profile);
+      if (profErr) {
+        console.warn('Profile fetch note:', profErr.message);
+      } else if (prof) {
+        setProfile(prof as Profile);
+      }
 
-      if (userRoleRecords && userRoleRecords.length > 0) {
+      if (rolesErr) {
+        console.warn('User roles fetch note:', rolesErr.message);
+        setRoles(['user']);
+      } else if (userRoleRecords && userRoleRecords.length > 0) {
         const fetchedRoleNames = userRoleRecords
-          .map((ur: any) => ur.role?.toLowerCase())
+          .map((ur: any) => {
+            if (ur.roles?.name) return ur.roles.name.toLowerCase();
+            if (ur.role) return String(ur.role).toLowerCase();
+            return null;
+          })
           .filter(Boolean);
-        setRoles(fetchedRoleNames.length > 0 ? fetchedRoleNames : ['donor']);
+        
+        setRoles(fetchedRoleNames.length > 0 ? fetchedRoleNames : ['user']);
       } else {
-        setRoles(['donor']);
+        setRoles(['user']);
       }
     } catch (err) {
-      console.error('Error loading user profile & roles:', err);
+      console.warn('Error loading user profile & roles:', err);
+      setRoles(['user']);
     }
-  }, []);
+  }, [supabase]);
 
   const refreshProfile = async () => {
     if (user?.id) {
@@ -95,25 +80,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     let mounted = true;
 
-    // Get initial Auth Session
-    supabase.auth.getSession().then(({ data: { session: initialSession } }: any) => {
+    // 1. Get initial Auth Session
+    supabase.auth.getSession().then(({ data: { session: initialSession }, error }: any) => {
       if (!mounted) return;
-      if (initialSession) {
+      if (error) {
+        console.warn('Initial session check note:', error.message);
+      }
+      if (initialSession?.user) {
         setSession(initialSession);
         setUser(initialSession.user);
         fetchProfileAndRoles(initialSession.user.id).finally(() => {
           if (mounted) setIsLoading(false);
         });
       } else {
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        setRoles([]);
         setIsLoading(false);
       }
+    }).catch((e: any) => {
+      console.warn('Session retrieval exception:', e);
+      if (mounted) setIsLoading(false);
     });
 
-    // Listen to Supabase Auth State Changes (Login, Signout, Token Refresh)
+    // 2. Subscribe to Supabase Auth State Changes (Login, Signout, Token Refresh, Password Recovery)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: string, currentSession: any) => {
       if (!mounted) return;
 
-      if (currentSession) {
+      if (currentSession?.user) {
         setSession(currentSession);
         setUser(currentSession.user);
         await fetchProfileAndRoles(currentSession.user.id);
@@ -130,10 +125,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [fetchProfileAndRoles]);
+  }, [fetchProfileAndRoles, supabase]);
 
-  // Sign Up with Email + Password
-  const signUp = async (email: string, password: string, metadata?: Record<string, any>) => {
+  // Sign Up with Email + Password & metadata (full_name, phone)
+  const signUp = async (email: string, password: string, metadata: { full_name: string; phone: string; [key: string]: any }) => {
     if (!supabase) return { data: null, error: { message: 'Supabase client error' } };
     return await supabase.auth.signUp({
       email,
@@ -145,7 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  // Sign In with Email + Password
+  // Sign In with Email + Password only
   const signIn = async (email: string, password: string) => {
     if (!supabase) return { data: null, error: { message: 'Supabase client error' } };
     return await supabase.auth.signInWithPassword({
@@ -158,7 +153,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const resetPassword = async (email: string) => {
     if (!supabase) return { data: null, error: { message: 'Supabase client error' } };
     return await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/login` : undefined
+      redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/login?mode=reset` : undefined
+    });
+  };
+
+  // Update Password (when authenticated or in recovery session)
+  const updatePassword = async (newPassword: string) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase client error' } };
+    return await supabase.auth.updateUser({
+      password: newPassword
     });
   };
 
@@ -172,7 +175,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {
       console.error('Logout error:', e);
     } finally {
-      logoutUser();
       setUser(null);
       setSession(null);
       setProfile(null);
@@ -181,69 +183,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const loginUser = (userProfile: any) => {
-    setCustomUser(userProfile);
-    if (userProfile?.role?.toLowerCase() === 'admin') {
-      setRoles(['admin', 'donor']);
-    } else {
-      setRoles(['donor']);
-    }
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('athiaa_user', JSON.stringify(userProfile));
-    }
-  };
-
-  const logoutUser = () => {
-    setCustomUser(null);
-    setRoles([]);
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('athiaa_user');
-      localStorage.removeItem('athia_user');
-    }
-  };
-
-  const userToReturn = user || customUser;
-  const activeRoles = roles.length > 0 ? roles : (customUser?.role?.toLowerCase() === 'admin' ? ['admin', 'donor'] : ['donor']);
-
   const hasRole = (roleName: string) => {
     const target = roleName.toLowerCase();
-    return activeRoles.includes(target);
+    return roles.includes(target);
   };
 
   const isAdmin = hasRole('admin') || hasRole('super_admin');
 
-  if (hasError || !supabase) {
-    return (
-      <AuthContext.Provider
-        value={{
-          user: customUser,
-          profile: null,
-          session: null,
-          roles: activeRoles,
-          isAdmin,
-          isLoading: false,
-          hasRole,
-          signUp: async () => ({ data: null, error: null }),
-          signIn: async () => ({ data: null, error: null }),
-          signOut: async () => {},
-          resetPassword: async () => ({ data: null, error: null }),
-          refreshProfile: async () => {},
-          loginUser,
-          logoutUser,
-        }}
-      >
-        {children}
-      </AuthContext.Provider>
-    );
-  }
-
   return (
     <AuthContext.Provider
       value={{
-        user: userToReturn,
+        user,
         profile,
         session,
-        roles: activeRoles,
+        roles,
         isAdmin,
         isLoading,
         hasRole,
@@ -251,9 +204,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signIn,
         signOut,
         resetPassword,
+        updatePassword,
         refreshProfile,
-        loginUser,
-        logoutUser,
       }}
     >
       {children}
