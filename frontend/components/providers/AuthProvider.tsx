@@ -33,37 +33,71 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfileAndRoles = useCallback(async (userId: string) => {
     if (!supabase || !userId) return;
     try {
-      // Parallel fetch profile and joined user_roles
-      const [{ data: prof, error: profErr }, { data: userRoleRecords, error: rolesErr }] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
-        supabase.from('user_roles').select('role_id, role, roles(name)').eq('user_id', userId)
-      ]);
+      // 1. Fetch Profile
+      const { data: prof, error: profErr } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
 
       if (profErr) {
-        console.warn('Profile fetch note:', profErr.message);
+        console.warn('[Auth] Profile fetch note:', profErr.message);
       } else if (prof) {
         setProfile(prof as Profile);
       }
 
-      if (rolesErr) {
-        console.warn('User roles fetch note:', rolesErr.message);
-        setRoles(['user']);
-      } else if (userRoleRecords && userRoleRecords.length > 0) {
-        const fetchedRoleNames = userRoleRecords
-          .map((ur: any) => {
-            if (ur.roles?.name) return ur.roles.name.toLowerCase();
-            if (ur.role) return String(ur.role).toLowerCase();
-            return null;
-          })
-          .filter(Boolean);
-        
-        setRoles(fetchedRoleNames.length > 0 ? fetchedRoleNames : ['user']);
-      } else {
-        setRoles(['user']);
+      // 2. Determine Roles with full resilience (RPC + Table check)
+      const rolesAccumulator: Set<string> = new Set(['user', 'donor']);
+
+      // 2a. Check direct has_role('admin') RPC (single source of truth in DB)
+      try {
+        const { data: isDbAdmin } = await supabase.rpc('has_role', {
+          check_user_id: userId,
+          check_role: 'admin'
+        });
+        if (isDbAdmin) {
+          rolesAccumulator.add('admin');
+        }
+      } catch (rpcErr) {
+        console.warn('[Auth] has_role RPC check fallback:', rpcErr);
       }
+
+      // 2b. Query user_roles table rows directly
+      try {
+        const { data: userRoleRecords } = await supabase
+          .from('user_roles')
+          .select('*')
+          .eq('user_id', userId);
+
+        if (userRoleRecords && userRoleRecords.length > 0) {
+          // Fetch roles lookup table to map role_ids if present
+          const { data: lookupRoles } = await supabase.from('roles').select('id, name');
+          const roleIdMap = new Map<number, string>();
+          if (lookupRoles) {
+            lookupRoles.forEach((r: any) => roleIdMap.set(r.id, String(r.name).toLowerCase()));
+          }
+
+          userRoleRecords.forEach((ur: any) => {
+            // Direct role string
+            if (ur.role) {
+              rolesAccumulator.add(String(ur.role).toLowerCase());
+            }
+            // Role ID lookup
+            if (ur.role_id && roleIdMap.has(ur.role_id)) {
+              rolesAccumulator.add(roleIdMap.get(ur.role_id)!);
+            }
+          });
+        }
+      } catch (tableErr) {
+        console.warn('[Auth] user_roles table query fallback:', tableErr);
+      }
+
+      const finalRolesList = Array.from(rolesAccumulator);
+      console.log('[Auth] Roles verified for session:', finalRolesList);
+      setRoles(finalRolesList);
     } catch (err) {
-      console.warn('Error loading user profile & roles:', err);
-      setRoles(['user']);
+      console.warn('[Auth] Error in fetchProfileAndRoles:', err);
+      setRoles(['user', 'donor']);
     }
   }, [supabase]);
 
