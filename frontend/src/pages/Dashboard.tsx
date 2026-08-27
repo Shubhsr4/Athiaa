@@ -26,11 +26,12 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { useDonations } from '@/lib/hooks/useDonations';
 import { useAdoptions } from '@/lib/hooks/useAdoptions';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { createClient } from '@/lib/supabase/client';
 
 export default function DashboardPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { 
     favoriteDogs, 
     adoptionApplications, 
@@ -42,10 +43,16 @@ export default function DashboardPage() {
     user,
     roles,
     hasRole,
+    isAdmin,
     signOut,
-    loginUser,
     isLoading
   } = useAuth();
+
+  useEffect(() => {
+    if (isAdmin) {
+      navigate('/admin', { replace: true });
+    }
+  }, [isAdmin, navigate]);
 
   // Selected tab & receipt modal state
   const [activeTab, setActiveTab] = useState<'profile' | 'applications' | 'fosters' | 'donations' | 'favorites'>('profile');

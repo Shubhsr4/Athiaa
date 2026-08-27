@@ -27,7 +27,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
   const pathname = useLocation().pathname || '/';
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
-  const { profile, signOut } = useAuth();
+  const { profile, user, isAdmin, signOut } = useAuth();
   const {
     cartItems,
     setCartItems,
@@ -164,32 +164,35 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
             </button>
 
             {/* Profile Avatar / Login Action */}
-            {profile ? (
+            {user ? (
               <div className="flex items-center space-x-2">
                 <Link 
-                  to="/dashboard"
-                  className="flex items-center space-x-1.5 cursor-pointer bg-cream p-1.5 rounded-xl border border-orange-50 font-sans text-xs select-none hover:shadow-xs transition"
+                  to={isAdmin ? "/admin" : "/dashboard"}
+                  className={`flex items-center space-x-1.5 cursor-pointer p-1.5 rounded-xl border font-sans text-xs select-none transition ${
+                    isAdmin 
+                      ? 'bg-amber-50 border-amber-300 hover:bg-amber-100 shadow-xs' 
+                      : 'bg-cream border-orange-50 hover:shadow-xs'
+                  }`}
+                  title={isAdmin ? "Open Admin Operations Console" : "Open User Dashboard"}
                 >
-                  <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center font-bold text-white text-[10px]">
-                    {profile.avatar_url ? (
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-white text-[10px] ${
+                    isAdmin ? 'bg-amber-600' : 'bg-primary'
+                  }`}>
+                    {profile?.avatar_url ? (
                       <img src={profile.avatar_url} alt="avatar" className="w-full h-full rounded-full" referrerPolicy="no-referrer" />
                     ) : (
                       <User size={12} className="text-white" />
                     )}
                   </div>
                   <span className="hidden md:inline font-bold text-deep pr-1">
-                    {(((profile as any).name || profile.display_name || profile.full_name || 'Member')).split(' ')[0]}
+                    {(((profile as any)?.name || profile?.display_name || profile?.full_name || user.email?.split('@')[0] || 'Member')).split(' ')[0]}
                   </span>
+                  {isAdmin && (
+                    <span className="bg-amber-600 text-white text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded font-mono">
+                      Admin
+                    </span>
+                  )}
                 </Link>
-                
-                {['admin', 'super_admin'].includes(profile.role) && (
-                  <Link
-                    to="/admin"
-                    className="bg-orange-100 hover:bg-orange-200 text-primary text-[10px] font-bold px-2 py-1.5 rounded-lg border border-orange-250 font-sans"
-                  >
-                    Admin
-                  </Link>
-                )}
               </div>
             ) : (
               <Link 
@@ -359,7 +362,11 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
           { path: '/adopt', label: 'Adopt', icon: PawPrint },
           { path: '/rescue', label: 'Rescue', icon: ShieldAlert },
           { path: '/donate', label: 'Donate', icon: Heart },
-          { path: profile ? '/dashboard' : '/login', label: 'Profile', icon: User }
+          { 
+            path: user ? (isAdmin ? '/admin' : '/dashboard') : '/login', 
+            label: isAdmin ? 'Admin' : 'Profile', 
+            icon: User 
+          }
         ].map(item => {
           const IconComp = item.icon;
           return (
